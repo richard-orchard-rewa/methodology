@@ -902,8 +902,7 @@ function toggleComments() {
   const panel = document.getElementById('comment-panel');
   const btn   = document.getElementById('comment-fab');
   panel.style.transform = commentsOpen ? 'translateX(0)' : 'translateX(100%)';
-  btn.textContent = commentsOpen ? '✕' : '💬';
-  btn.title = commentsOpen ? 'Close comments' : 'Comments';
+  btn.style.display = commentsOpen ? 'none' : 'flex';
   if (commentsOpen) { updateAuthUI(); loadComments(currentStage); }
 }
 
@@ -1253,8 +1252,13 @@ mark.c-hl:hover, mark.c-hl.c-hl-active { background: rgba(245, 158, 11, 0.45); }
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
 }
 .c-form-footer {
-  display: flex; justify-content: space-between; align-items: center;
+  display: flex; justify-content: flex-end; align-items: center;
 }
+.c-panel-close {
+  background: none; border: none; color: rgba(255,255,255,0.8); font-size: 18px;
+  cursor: pointer; padding: 0 2px; line-height: 1; flex-shrink: 0;
+}
+.c-panel-close:hover { color: white; }
 .c-quote-clear {
   font-size: 11px; color: var(--ink3); background: none;
   border: none; cursor: pointer; padding: 0; font-family: var(--font-sans);
@@ -1298,7 +1302,10 @@ mark.c-hl:hover, mark.c-hl.c-hl-active { background: rgba(245, 158, 11, 0.45); }
         <div class="c-panel-title">Comments — <span id="comment-stage-label">Overview</span></div>
         <div class="c-panel-sub">Visible to the RAWA team.</div>
       </div>
-      <button id="c-toggle-resolved" class="c-toggle-resolved" onclick="toggleShowResolved()" style="display:none">Show resolved</button>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+        <button id="c-toggle-resolved" class="c-toggle-resolved" onclick="toggleShowResolved()" style="display:none">Show resolved</button>
+        <button class="c-panel-close" onclick="toggleComments()" title="Close">✕</button>
+      </div>
     </div>
   </div>
   <div id="comment-list"></div>
@@ -1320,7 +1327,7 @@ mark.c-hl:hover, mark.c-hl.c-hl-active { background: rgba(245, 158, 11, 0.45); }
     </div>
     <textarea id="c-text" placeholder="Add a comment…" maxlength="1000" required></textarea>
     <div class="c-form-footer">
-      <button type="button" id="c-quote-clear-btn" class="c-quote-clear" onclick="clearPendingAnchor()" style="display:none">× Clear quote</button>
+      <button type="button" id="c-quote-clear-btn" class="c-quote-clear" onclick="clearPendingAnchor()" style="display:none;margin-right:auto">× Clear quote</button>
       <button id="c-submit" type="submit">Post</button>
     </div>
   </form>
