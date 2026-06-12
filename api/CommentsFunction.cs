@@ -54,6 +54,7 @@ public class CommentsFunction
         if (dto is null || string.IsNullOrWhiteSpace(dto.Author) || string.IsNullOrWhiteSpace(dto.Text))
         {
             var bad = req.CreateResponse(HttpStatusCode.BadRequest);
+            AddCors(bad);
             await bad.WriteStringAsync("Author and text are required.");
             return bad;
         }
@@ -74,9 +75,22 @@ public class CommentsFunction
         _log.LogInformation("Comment saved: stage={Stage} author={Author}", entity.PartitionKey, entity.Author);
 
         var created = req.CreateResponse(HttpStatusCode.Created);
+        AddCors(created);
         created.Headers.Add("Content-Type", "application/json");
         await created.WriteStringAsync(JsonSerializer.Serialize(ToResponse(entity), JsonOpts));
         return created;
+    }
+
+    // ── OPTIONS /api/comments  (CORS preflight) ──────────────────────────
+    [Function("OptionsComments")]
+    public HttpResponseData Options(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "options", Route = "comments")] HttpRequestData req)
+    {
+        var res = req.CreateResponse(HttpStatusCode.OK);
+        AddCors(res);
+        res.Headers.Add("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+        res.Headers.Add("Access-Control-Allow-Headers", "Content-Type");
+        return res;
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────
@@ -92,10 +106,14 @@ public class CommentsFunction
     private static async Task<HttpResponseData> OkJson(HttpRequestData req, object payload)
     {
         var res = req.CreateResponse(HttpStatusCode.OK);
+        AddCors(res);
         res.Headers.Add("Content-Type", "application/json");
         await res.WriteStringAsync(JsonSerializer.Serialize(payload, JsonOpts));
         return res;
     }
+
+    private static void AddCors(HttpResponseData res) =>
+        res.Headers.Add("Access-Control-Allow-Origin", "*");
 
     private static CommentResponse ToResponse(CommentEntity e) => new()
     {
