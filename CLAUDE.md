@@ -8,7 +8,7 @@ RAWA Methodology Reference — a static HTML page served via **Azure Static Web 
 
 ## Components
 
-**`src/rawa_methodology_reference_4.html`** — Single-file static frontend. All HTML, CSS, and JavaScript inline. The `COMMENTS_API` constant is set to `/api/comments` (same-origin, relative path).
+**`src/index.html`** — Single-file static frontend. All HTML, CSS, and JavaScript inline. The `COMMENTS_API` constant is set to `/api/comments` (same-origin, relative path).
 
 **`api/`** — .NET 8 Azure Functions (isolated worker model).
 - `CommentsFunction.cs` — Two HTTP triggers: `GET /api/comments?stage=<id>` and `POST /api/comments`.
