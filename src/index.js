@@ -654,7 +654,7 @@ const COMMENTS_API = location.hostname === 'localhost'
   : 'https://methodology-api.azurewebsites.net/api/comments';
 const ALLOWED_DOMAIN = '@relationshipswa.org.au';
 
-let currentStage = 'overview';
+let currentStage = new URLSearchParams(location.search).get('stage') || 'overview';
 let commentsOpen = false;
 let currentUser = null;
 let _detectedEmail = null;
@@ -1336,6 +1336,7 @@ mark.c-hl:hover, mark.c-hl.c-hl-active { background: rgba(245, 158, 11, 0.45); }
 initAuth();
 initSelection();
 loadNavCounts();
+loadComments(currentStage);
 
 window.addEventListener('popstate', e => {
   _popstateActive = true;
