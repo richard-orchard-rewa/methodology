@@ -96,6 +96,63 @@ public class CommentsFunction
         return res;
     }
 
+    // ── DELETE /api/comments/{id}?stage=s1&author=email ─────────────────
+    [Function("DeleteComment")]
+    public async Task<HttpResponseData> DeleteComment(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "comments/{id}")] HttpRequestData req,
+        string id)
+    {
+        var qs     = HttpUtility.ParseQueryString(req.Url.Query);
+        var stage  = qs["stage"]  ?? "";
+        var author = qs["author"] ?? "";
+
+        if (string.IsNullOrWhiteSpace(stage) || string.IsNullOrWhiteSpace(author))
+            return await BadRequest(req, "stage and author are required.");
+
+        var client = GetTableClient();
+        CommentEntity entity;
+        try { entity = await client.GetEntityAsync<CommentEntity>(stage, id); }
+        catch { return req.CreateResponse(HttpStatusCode.NotFound); }
+
+        if (!string.Equals(entity.Author, author, StringComparison.OrdinalIgnoreCase))
+            return await BadRequest(req, "You can only delete your own comments.");
+
+        await client.DeleteEntityAsync(stage, id, entity.ETag);
+        _log.LogInformation("Comment deleted: stage={Stage} id={Id}", stage, id);
+
+        var res = req.CreateResponse(HttpStatusCode.NoContent);
+        AddCors(res);
+        return res;
+    }
+
+    // ── PUT /api/comments/{id} ───────────────────────────────────────────
+    [Function("EditComment")]
+    public async Task<HttpResponseData> EditComment(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "comments/{id}")] HttpRequestData req,
+        string id)
+    {
+        var body = await req.ReadAsStringAsync() ?? "";
+        var dto  = JsonSerializer.Deserialize<EditCommentRequest>(body, JsonOpts);
+
+        if (dto is null || string.IsNullOrWhiteSpace(dto.Stage) ||
+            string.IsNullOrWhiteSpace(dto.Author) || string.IsNullOrWhiteSpace(dto.Text))
+            return await BadRequest(req, "stage, author and text are required.");
+
+        var client = GetTableClient();
+        CommentEntity entity;
+        try { entity = await client.GetEntityAsync<CommentEntity>(dto.Stage, id); }
+        catch { return req.CreateResponse(HttpStatusCode.NotFound); }
+
+        if (!string.Equals(entity.Author, dto.Author, StringComparison.OrdinalIgnoreCase))
+            return await BadRequest(req, "You can only edit your own comments.");
+
+        entity.Text = dto.Text.Trim();
+        await client.UpdateEntityAsync(entity, entity.ETag, TableUpdateMode.Replace);
+        _log.LogInformation("Comment edited: stage={Stage} id={Id}", dto.Stage, id);
+
+        return await OkJson(req, ToResponse(entity));
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────────
     private static TableClient GetTableClient()
     {
@@ -112,6 +169,14 @@ public class CommentsFunction
         AddCors(res);
         res.Headers.Add("Content-Type", "application/json");
         await res.WriteStringAsync(JsonSerializer.Serialize(payload, JsonOpts));
+        return res;
+    }
+
+    private static async Task<HttpResponseData> BadRequest(HttpRequestData req, string msg)
+    {
+        var res = req.CreateResponse(HttpStatusCode.BadRequest);
+        AddCors(res);
+        await res.WriteStringAsync(msg);
         return res;
     }
 

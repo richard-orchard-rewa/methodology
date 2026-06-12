@@ -30,6 +30,13 @@ public class PostCommentRequest
     public string? Suffix { get; set; }
 }
 
+public class EditCommentRequest
+{
+    public string Stage { get; set; } = "";
+    public string Author { get; set; } = "";
+    public string Text { get; set; } = "";
+}
+
 public class CommentResponse
 {
     public string Id { get; set; } = "";

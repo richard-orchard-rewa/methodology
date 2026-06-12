@@ -1430,6 +1430,11 @@ async function loadComments(stage) {
           <span class="c-time">${formatDate(c.createdAt)}</span>
         </div>
         <div class="c-text">${esc(c.text)}</div>
+        ${c.author === currentUser ? `
+        <div class="c-actions">
+          <button class="c-action-btn" onclick="editComment('${c.id}','${c.stage}')">Edit</button>
+          <button class="c-action-btn c-action-del" onclick="deleteComment('${c.id}','${c.stage}')">Delete</button>
+        </div>` : ''}
       </div>`).join('');
     list.scrollTop = list.scrollHeight;
     data.filter(c => c.quote).forEach(c => {
@@ -1472,6 +1477,75 @@ async function submitComment(e) {
   } finally {
     btn.disabled = false;
     btn.textContent = 'Post';
+  }
+}
+
+function editComment(id, stage) {
+  const item = document.querySelector(`.c-item[data-cid="${id}"]`);
+  if (!item) return;
+  const textEl = item.querySelector('.c-text');
+  const original = textEl.innerText;
+  item.dataset.originalText = original;
+  const ta = document.createElement('textarea');
+  ta.className = 'c-edit-area';
+  ta.value = original;
+  textEl.replaceWith(ta);
+  const actions = item.querySelector('.c-actions');
+  actions.style.display = 'none';
+  const editActions = document.createElement('div');
+  editActions.className = 'c-edit-actions';
+  editActions.innerHTML = `
+    <button class="c-action-btn" onclick="saveEdit('${id}','${stage}')">Save</button>
+    <button class="c-action-btn" onclick="cancelEdit('${id}')">Cancel</button>`;
+  actions.after(editActions);
+  ta.focus();
+}
+
+async function saveEdit(id, stage) {
+  const item = document.querySelector(`.c-item[data-cid="${id}"]`);
+  if (!item) return;
+  const ta = item.querySelector('.c-edit-area');
+  const newText = ta.value.trim();
+  if (!newText) return;
+  const saveBtn = item.querySelector('.c-edit-actions .c-action-btn');
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving…'; }
+  try {
+    const res = await fetch(`${COMMENTS_API}/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ stage, author: currentUser, text: newText })
+    });
+    if (res.ok) { await loadComments(currentStage); }
+    else { alert('Could not save edit.'); if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save'; } }
+  } catch(e) {
+    alert('Could not reach the API.');
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save'; }
+  }
+}
+
+function cancelEdit(id) {
+  const item = document.querySelector(`.c-item[data-cid="${id}"]`);
+  if (!item) return;
+  const ta = item.querySelector('.c-edit-area');
+  const textEl = document.createElement('div');
+  textEl.className = 'c-text';
+  textEl.innerHTML = esc(item.dataset.originalText || '');
+  ta.replaceWith(textEl);
+  item.querySelector('.c-edit-actions')?.remove();
+  item.querySelector('.c-actions').style.display = 'flex';
+}
+
+async function deleteComment(id, stage) {
+  if (!confirm('Delete this comment?')) return;
+  try {
+    const res = await fetch(
+      `${COMMENTS_API}/${id}?stage=${encodeURIComponent(stage)}&author=${encodeURIComponent(currentUser)}`,
+      { method: 'DELETE' }
+    );
+    if (res.ok) { await loadComments(currentStage); }
+    else { alert('Could not delete comment.'); }
+  } catch(e) {
+    alert('Could not reach the API.');
   }
 }
 
@@ -1624,6 +1698,24 @@ mark.c-hl:hover, mark.c-hl.c-hl-active { background: rgba(245, 158, 11, 0.45); }
 .c-quote-clear:hover { color: var(--rawa-navy); }
 @keyframes c-pulse { 0%,100%{outline-color:transparent} 50%{outline-color:var(--rawa-blue)} }
 .c-item.c-hl-pulse { outline: 2px solid var(--rawa-blue); outline-offset: 2px; animation: c-pulse 0.6s ease 3; }
+.c-actions, .c-edit-actions {
+  display: flex; gap: 6px; justify-content: flex-end; margin-top: 6px;
+}
+.c-action-btn {
+  font-size: 11px; padding: 2px 10px; border-radius: var(--r-pill);
+  border: 1px solid var(--rawa-grey-300); background: white;
+  color: var(--ink2); cursor: pointer; font-family: var(--font-sans);
+  font-weight: var(--fw-medium); transition: border-color 0.15s, color 0.15s;
+}
+.c-action-btn:hover { border-color: var(--rawa-blue); color: var(--rawa-blue); }
+.c-action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.c-action-del:hover { border-color: #e53e3e; color: #e53e3e; }
+.c-edit-area {
+  width: 100%; font-family: var(--font-sans); font-size: 13px;
+  font-weight: var(--fw-medium); padding: 6px 8px; margin-top: 4px;
+  border: 1.5px solid var(--rawa-blue); border-radius: var(--r-sm);
+  color: var(--rawa-ink); resize: vertical; box-sizing: border-box; min-height: 60px;
+}
 @media (max-width: 600px) {
   #comment-panel { width: 100%; }
   #comment-fab { bottom: 16px; right: 16px; }
