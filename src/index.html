@@ -1204,9 +1204,49 @@ showStage('overview');
 // ═══════════════════════════════════════════════════════════
 
 const COMMENTS_API = 'https://methodology-api.azurewebsites.net/api/comments';
+const ALLOWED_DOMAIN = '@relationshipswa.org.au';
 
 let currentStage = 'overview';
 let commentsOpen = false;
+let currentUser = null;
+
+async function initAuth() {
+  try {
+    const res = await fetch('/.auth/me');
+    const data = await res.json();
+    const principal = data.clientPrincipal;
+    if (principal && principal.userDetails) {
+      const email = principal.userDetails.toLowerCase();
+      currentUser = email.endsWith(ALLOWED_DOMAIN) ? principal.userDetails : '__wrong_domain__';
+    }
+  } catch(e) {
+    // /.auth/me unavailable (local dev) — allow posting without login
+    currentUser = 'local-dev';
+  }
+}
+
+function updateAuthUI() {
+  const prompt  = document.getElementById('c-auth-prompt');
+  const denied  = document.getElementById('c-auth-denied');
+  const form    = document.getElementById('c-form');
+  if (!prompt || !form) return;
+
+  if (currentUser === '__wrong_domain__') {
+    prompt.style.display = 'none';
+    denied.style.display = 'flex';
+    form.style.display   = 'none';
+  } else if (currentUser) {
+    const label = currentUser === 'local-dev' ? 'local dev' : currentUser;
+    document.getElementById('c-user-label').textContent = label;
+    prompt.style.display = 'none';
+    denied.style.display = 'none';
+    form.style.display   = 'flex';
+  } else {
+    prompt.style.display = 'flex';
+    denied.style.display = 'none';
+    form.style.display   = 'none';
+  }
+}
 
 // Track which stage is active so comments load on stage switch
 const _origShowStage = showStage;
@@ -1232,7 +1272,7 @@ function toggleComments() {
   panel.style.transform = commentsOpen ? 'translateX(0)' : 'translateX(100%)';
   btn.textContent = commentsOpen ? '✕' : '💬';
   btn.title = commentsOpen ? 'Close comments' : 'Comments';
-  if (commentsOpen) loadComments(currentStage);
+  if (commentsOpen) { updateAuthUI(); loadComments(currentStage); }
 }
 
 async function loadComments(stage) {
@@ -1261,7 +1301,7 @@ async function loadComments(stage) {
 
 async function submitComment(e) {
   e.preventDefault();
-  const author = document.getElementById('c-author').value.trim();
+  const author = currentUser;
   const text   = document.getElementById('c-text').value.trim();
   if (!author || !text) return;
 
@@ -1378,6 +1418,24 @@ document.body.insertAdjacentHTML('beforeend', `
 }
 #c-submit:hover { background: var(--rawa-blue); }
 #c-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+.c-auth-box {
+  border-top: 1px solid var(--divider); padding: 16px 12px;
+  display: flex; flex-direction: column; align-items: center;
+  gap: 10px; background: white; flex-shrink: 0;
+}
+.c-auth-msg { font-size: 13px; color: var(--ink2); text-align: center; margin: 0; font-weight: var(--fw-medium); }
+.c-auth-btn {
+  padding: 8px 20px; background: var(--rawa-navy); color: white;
+  border-radius: var(--r-pill); font-size: 13px; font-weight: var(--fw-semibold);
+  text-decoration: none; transition: background 0.15s;
+}
+.c-auth-btn:hover { background: var(--rawa-blue); }
+.c-user-row {
+  display: flex; justify-content: space-between; align-items: center; gap: 8px;
+}
+.c-user-label { font-size: 12px; color: var(--ink2); font-weight: var(--fw-medium); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.c-signout { font-size: 11px; color: var(--ink3); text-decoration: underline; cursor: pointer; white-space: nowrap; }
+.c-signout:hover { color: var(--rawa-navy); }
 @media (max-width: 600px) {
   #comment-panel { width: 100%; }
   #comment-fab { bottom: 16px; right: 16px; }
@@ -1385,15 +1443,27 @@ document.body.insertAdjacentHTML('beforeend', `
 </style>
 
 <button id="comment-fab" onclick="toggleComments()" title="Comments">💬</button>
+<script>initAuth();</script>
 
 <div id="comment-panel">
   <div class="c-panel-header">
     <div class="c-panel-title">Comments — <span id="comment-stage-label">Overview</span></div>
-    <div class="c-panel-sub">Visible to everyone with this link.</div>
+    <div class="c-panel-sub">Visible to the RAWA team.</div>
   </div>
   <div id="comment-list"></div>
-  <form class="c-form" onsubmit="submitComment(event)">
-    <input id="c-author" type="text" placeholder="Your name" maxlength="80" required>
+  <div id="c-auth-prompt" class="c-auth-box" style="display:none">
+    <p class="c-auth-msg">Sign in to leave a comment.</p>
+    <a href="/.auth/login/aad?post_login_redirect_uri=/" class="c-auth-btn">Sign in with Microsoft</a>
+  </div>
+  <div id="c-auth-denied" class="c-auth-box" style="display:none">
+    <p class="c-auth-msg">Only @relationshipswa.org.au accounts can comment.</p>
+    <a href="/.auth/logout?post_logout_redirect_uri=/" class="c-auth-btn">Sign out</a>
+  </div>
+  <form id="c-form" class="c-form" onsubmit="submitComment(event)" style="display:none">
+    <div class="c-user-row">
+      <span id="c-user-label" class="c-user-label"></span>
+      <a href="/.auth/logout?post_logout_redirect_uri=/" class="c-signout">Sign out</a>
+    </div>
     <textarea id="c-text" placeholder="Add a comment…" maxlength="1000" required></textarea>
     <button id="c-submit" type="submit">Post</button>
   </form>
