@@ -66,7 +66,10 @@ public class CommentsFunction
             RowKey       = $"{now:yyyyMMddHHmmssffff}_{Guid.NewGuid():N}",
             Author       = dto.Author.Trim(),
             Text         = dto.Text.Trim(),
-            CreatedAt    = now
+            CreatedAt    = now,
+            Quote        = dto.Quote?.Trim() ?? "",
+            Prefix       = dto.Prefix?.Trim() ?? "",
+            Suffix       = dto.Suffix?.Trim() ?? ""
         };
 
         var client = GetTableClient();
@@ -121,6 +124,9 @@ public class CommentsFunction
         Stage     = e.PartitionKey,
         Author    = e.Author,
         Text      = e.Text,
-        CreatedAt = e.CreatedAt
+        CreatedAt = e.CreatedAt,
+        Quote     = string.IsNullOrEmpty(e.Quote)  ? null : e.Quote,
+        Prefix    = string.IsNullOrEmpty(e.Prefix) ? null : e.Prefix,
+        Suffix    = string.IsNullOrEmpty(e.Suffix) ? null : e.Suffix
     };
 }
