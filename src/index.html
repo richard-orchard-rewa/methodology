@@ -1254,10 +1254,12 @@ function startAnchoredComment() {
   else { updateAuthUI(); loadComments(currentStage); }
   const wrap = document.querySelector('.c-quote-wrap');
   const preview = document.getElementById('c-quote-preview');
+  const clearBtn = document.getElementById('c-quote-clear-btn');
   if (wrap && preview) {
     preview.textContent = quote.length > 120 ? quote.slice(0, 117) + '…' : quote;
     wrap.style.display = 'block';
   }
+  if (clearBtn) clearBtn.style.display = 'inline';
   setTimeout(() => document.getElementById('c-text')?.focus(), 150);
 }
 
@@ -1265,6 +1267,8 @@ function clearPendingAnchor() {
   pendingAnchor = null;
   const wrap = document.querySelector('.c-quote-wrap');
   if (wrap) wrap.style.display = 'none';
+  const clearBtn = document.getElementById('c-quote-clear-btn');
+  if (clearBtn) clearBtn.style.display = 'none';
 }
 
 // ── HIGHLIGHT ENGINE ──────────────────────────────────────────────────────
@@ -1630,7 +1634,7 @@ document.body.insertAdjacentHTML('beforeend', `
 }
 .c-form textarea { min-height: 72px; }
 #c-submit {
-  align-self: flex-end; padding: 8px 20px;
+  padding: 8px 20px;
   background: var(--rawa-navy); color: white;
   border: none; border-radius: var(--r-pill);
   font-family: var(--font-sans); font-size: 13px;
@@ -1682,8 +1686,8 @@ mark.c-hl:hover, mark.c-hl.c-hl-active { background: rgba(245, 158, 11, 0.45); }
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
 }
 .c-quote-wrap {
-  display: none; position: relative;
-  border-left: 3px solid var(--rawa-blue); padding: 4px 24px 4px 8px;
+  display: none;
+  border-left: 3px solid var(--rawa-blue); padding: 4px 8px;
   background: var(--rawa-grey-100); border-radius: 0 var(--r-sm) var(--r-sm) 0;
 }
 #c-quote-preview {
@@ -1691,10 +1695,13 @@ mark.c-hl:hover, mark.c-hl.c-hl-active { background: rgba(245, 158, 11, 0.45); }
   overflow: hidden; text-overflow: ellipsis;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
 }
+.c-form-footer {
+  display: flex; justify-content: space-between; align-items: center;
+}
 .c-quote-clear {
-  position: absolute; top: 2px; right: 4px;
-  font-size: 13px; color: var(--ink3); background: none;
-  border: none; cursor: pointer; line-height: 1; padding: 2px 4px;
+  font-size: 11px; color: var(--ink3); background: none;
+  border: none; cursor: pointer; padding: 0; font-family: var(--font-sans);
+  font-weight: var(--fw-medium);
 }
 .c-quote-clear:hover { color: var(--rawa-navy); }
 @keyframes c-pulse { 0%,100%{outline-color:transparent} 50%{outline-color:var(--rawa-blue)} }
@@ -1748,10 +1755,12 @@ mark.c-hl:hover, mark.c-hl.c-hl-active { background: rgba(245, 158, 11, 0.45); }
     </div>
     <div class="c-quote-wrap">
       <span id="c-quote-preview"></span>
-      <button type="button" class="c-quote-clear" onclick="clearPendingAnchor()">×</button>
     </div>
     <textarea id="c-text" placeholder="Add a comment…" maxlength="1000" required></textarea>
-    <button id="c-submit" type="submit">Post</button>
+    <div class="c-form-footer">
+      <button type="button" id="c-quote-clear-btn" class="c-quote-clear" onclick="clearPendingAnchor()" style="display:none">× Clear quote</button>
+      <button id="c-submit" type="submit">Post</button>
+    </div>
   </form>
 </div>
 `);
