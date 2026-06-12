@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Comments Admin — RAWA Methodology</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --rawa-navy: #004576; --rawa-blue: #0062A8;
+  --rawa-grey-100: #FAFAFA; --rawa-grey-200: #F2F2F2; --rawa-grey-300: #CCCCCC;
+  --ink: #1A1A1A; --ink2: #4D4D4D; --ink3: #999999;
+  --divider: #F2F2F2;
+  --font-sans: "Plus Jakarta Sans", -apple-system, "Segoe UI", Roboto, sans-serif;
+  --r-sm: 8px; --r-pill: 999px;
+  --shadow-card: 0px 4px 10px rgba(0,0,0,0.08), 0px 1px 2px rgba(0,0,0,0.05);
+  --stage-colors: { };
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans); background: var(--rawa-grey-100); color: var(--ink); font-size: 14px; }
+
+header {
+  background: var(--rawa-navy); color: white;
+  padding: 14px 24px; display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 10;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+.header-left { display: flex; flex-direction: column; gap: 2px; }
+.header-title { font-size: 15px; font-weight: 700; }
+.header-sub   { font-size: 11px; opacity: 0.65; font-weight: 500; }
+.header-right { display: flex; align-items: center; gap: 12px; }
+.back-link { font-size: 12px; color: rgba(255,255,255,0.75); text-decoration: none; font-weight: 600; }
+.back-link:hover { color: white; }
+#user-chip { font-size: 11px; background: rgba(255,255,255,0.15); padding: 4px 10px; border-radius: var(--r-pill); font-weight: 600; }
+
+main { max-width: 1000px; margin: 0 auto; padding: 24px 16px; }
+
+.toolbar {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.filter-btn {
+  font-size: 12px; font-weight: 600; font-family: var(--font-sans);
+  padding: 5px 14px; border-radius: var(--r-pill);
+  border: 1px solid var(--rawa-grey-300); background: white;
+  cursor: pointer; color: var(--ink2); transition: all 0.15s;
+}
+.filter-btn:hover  { border-color: var(--rawa-blue); color: var(--rawa-blue); }
+.filter-btn.active { background: var(--rawa-navy); border-color: var(--rawa-navy); color: white; }
+#comment-count { font-size: 12px; color: var(--ink3); font-weight: 600; margin-left: auto; }
+
+.comment-table {
+  background: white; border-radius: var(--r-sm);
+  box-shadow: var(--shadow-card); overflow: hidden;
+}
+.table-head {
+  display: grid; grid-template-columns: 110px 160px 1fr 110px;
+  padding: 10px 16px; background: var(--rawa-grey-200);
+  font-size: 11px; font-weight: 700; color: var(--ink3);
+  text-transform: uppercase; letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--divider);
+}
+.comment-row {
+  display: grid; grid-template-columns: 110px 160px 1fr 110px;
+  padding: 12px 16px; border-bottom: 1px solid var(--divider);
+  align-items: start; gap: 8px; transition: background 0.1s;
+}
+.comment-row:last-child { border-bottom: none; }
+.comment-row:hover { background: var(--rawa-grey-100); }
+
+.stage-pill {
+  display: inline-block; font-size: 10px; font-weight: 700;
+  padding: 2px 8px; border-radius: var(--r-pill);
+  text-transform: uppercase; letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.stage-overview { background: #E8F0F8; color: #004576; }
+.stage-s0 { background: #EEF7E8; color: #1D4F45; }
+.stage-s1 { background: #D9F0EE; color: #004576; }
+.stage-s2 { background: #FFF6DF; color: #6B4700; }
+.stage-s3 { background: #FFE2D2; color: #7A2E1A; }
+.stage-s4 { background: #EEF7E8; color: #1D4F45; }
+.stage-s5 { background: #C8E9E7; color: #004576; }
+.stage-s6 { background: #E5DDF1; color: #4B3A7A; }
+
+.col-author { font-size: 12px; font-weight: 600; color: var(--ink2); word-break: break-all; }
+.col-content { display: flex; flex-direction: column; gap: 4px; }
+.col-quote {
+  font-size: 11px; color: var(--ink3); font-style: italic;
+  border-left: 3px solid var(--rawa-blue); padding: 2px 6px;
+  background: var(--rawa-grey-100); border-radius: 0 4px 4px 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.col-text { font-size: 13px; color: var(--ink); line-height: 1.5; font-weight: 500; }
+.col-time { font-size: 11px; color: var(--ink3); font-weight: 500; white-space: nowrap; }
+
+.empty { text-align: center; padding: 48px 16px; color: var(--ink3); font-weight: 500; font-style: italic; }
+.loading { text-align: center; padding: 48px 16px; color: var(--ink3); font-weight: 500; }
+
+.auth-wall {
+  max-width: 360px; margin: 80px auto; background: white;
+  border-radius: var(--r-sm); box-shadow: var(--shadow-card);
+  padding: 32px; text-align: center; display: flex; flex-direction: column; gap: 16px;
+}
+.auth-wall h2 { font-size: 18px; font-weight: 700; color: var(--rawa-navy); }
+.auth-wall p  { font-size: 13px; color: var(--ink2); }
+.sign-in-btn {
+  display: inline-block; padding: 10px 24px; background: var(--rawa-navy); color: white;
+  border-radius: var(--r-pill); font-size: 13px; font-weight: 700;
+  text-decoration: none; transition: background 0.15s;
+}
+.sign-in-btn:hover { background: var(--rawa-blue); }
+
+@media (max-width: 700px) {
+  .table-head  { grid-template-columns: 90px 1fr 90px; }
+  .comment-row { grid-template-columns: 90px 1fr 90px; }
+  .col-author  { display: none; }
+  .col-text    { font-size: 12px; }
+}
+</style>
+</head>
+<body>
+
+<div id="auth-wall" class="auth-wall" style="display:none">
+  <h2>Sign in required</h2>
+  <p>Only @relationshipswa.org.au accounts can access this page.</p>
+  <a href="/.auth/login/aad?post_login_redirect_uri=/admin.html" class="sign-in-btn">Sign in with Microsoft</a>
+</div>
+
+<div id="app" style="display:none">
+  <header>
+    <div class="header-left">
+      <span class="header-title">Comments Admin</span>
+      <span class="header-sub">RAWA Methodology Reference</span>
+    </div>
+    <div class="header-right">
+      <span id="user-chip"></span>
+      <a href="/" class="back-link">← Back to page</a>
+    </div>
+  </header>
+
+  <main>
+    <div class="toolbar">
+      <button class="filter-btn active" data-stage="all" onclick="setFilter('all')">All</button>
+      <button class="filter-btn" data-stage="overview" onclick="setFilter('overview')">Overview</button>
+      <button class="filter-btn" data-stage="s0" onclick="setFilter('s0')">Stage 0</button>
+      <button class="filter-btn" data-stage="s1" onclick="setFilter('s1')">Stage 1</button>
+      <button class="filter-btn" data-stage="s2" onclick="setFilter('s2')">Stage 2</button>
+      <button class="filter-btn" data-stage="s3" onclick="setFilter('s3')">Stage 3</button>
+      <button class="filter-btn" data-stage="s4" onclick="setFilter('s4')">Stage 4</button>
+      <button class="filter-btn" data-stage="s5" onclick="setFilter('s5')">Stage 5</button>
+      <button class="filter-btn" data-stage="s6" onclick="setFilter('s6')">Stage 6</button>
+      <span id="comment-count"></span>
+    </div>
+
+    <div class="comment-table">
+      <div class="table-head">
+        <div>Stage</div>
+        <div>Author</div>
+        <div>Comment</div>
+        <div>Date</div>
+      </div>
+      <div id="comment-body"><div class="loading">Loading comments…</div></div>
+    </div>
+  </main>
+</div>
+
+<script>
+const COMMENTS_API = location.hostname === 'localhost'
+  ? 'http://localhost:7071/api/comments'
+  : 'https://methodology-api.azurewebsites.net/api/comments';
+
+const ALLOWED_DOMAIN = '@relationshipswa.org.au';
+const STAGES = ['overview','s0','s1','s2','s3','s4','s5','s6'];
+const STAGE_LABELS = { overview:'Overview', s0:'Stage 0', s1:'Stage 1', s2:'Stage 2', s3:'Stage 3', s4:'Stage 4', s5:'Stage 5', s6:'Stage 6' };
+
+let allComments = [];
+let activeFilter = 'all';
+
+async function init() {
+  try {
+    const res  = await fetch('/.auth/me');
+    const data = await res.json();
+    const p    = data.clientPrincipal;
+    if (!p || !p.userDetails) {
+      showAuthWall();
+      return;
+    }
+    const email = p.userDetails.toLowerCase();
+    if (!email.endsWith(ALLOWED_DOMAIN)) {
+      showAuthWall();
+      return;
+    }
+    document.getElementById('user-chip').textContent = p.userDetails;
+  } catch(e) {
+    // local dev — allow through
+    document.getElementById('user-chip').textContent = 'local dev';
+  }
+
+  document.getElementById('app').style.display = 'block';
+  await loadAll();
+}
+
+function showAuthWall() {
+  document.getElementById('auth-wall').style.display = 'flex';
+}
+
+async function loadAll() {
+  const results = await Promise.all(
+    STAGES.map(s =>
+      fetch(`${COMMENTS_API}?stage=${s}`)
+        .then(r => r.json())
+        .catch(() => [])
+    )
+  );
+  allComments = results.flat().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  render();
+}
+
+function setFilter(stage) {
+  activeFilter = stage;
+  document.querySelectorAll('.filter-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.stage === stage));
+  render();
+}
+
+function render() {
+  const filtered = activeFilter === 'all'
+    ? allComments
+    : allComments.filter(c => c.stage === activeFilter);
+
+  const count = document.getElementById('comment-count');
+  count.textContent = `${filtered.length} comment${filtered.length !== 1 ? 's' : ''}`;
+
+  const body = document.getElementById('comment-body');
+  if (!filtered.length) {
+    body.innerHTML = '<div class="empty">No comments for this filter.</div>';
+    return;
+  }
+
+  body.innerHTML = filtered.map(c => `
+    <div class="comment-row">
+      <div><span class="stage-pill stage-${esc(c.stage)}">${esc(STAGE_LABELS[c.stage] || c.stage)}</span></div>
+      <div class="col-author">${esc(c.author)}</div>
+      <div class="col-content">
+        ${c.quote ? `<div class="col-quote">${esc(c.quote)}</div>` : ''}
+        <div class="col-text">${esc(c.text)}</div>
+      </div>
+      <div class="col-time">${formatDate(c.createdAt)}</div>
+    </div>`).join('');
+}
+
+function esc(str) {
+  return String(str ?? '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function formatDate(iso) {
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-AU', { day:'numeric', month:'short', year:'numeric' }) + '<br>' +
+         d.toLocaleTimeString('en-AU', { hour:'2-digit', minute:'2-digit' });
+}
+
+init();
+</script>
+</body>
+</html>

@@ -1270,7 +1270,8 @@ function clearPendingAnchor() {
 // ── HIGHLIGHT ENGINE ──────────────────────────────────────────────────────
 
 function _buildTextMap() {
-  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+  const root = document.querySelector('.stage-view.visible') || document.body;
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
     acceptNode(n) {
       const el = n.parentElement;
       if (!el) return NodeFilter.FILTER_REJECT;
