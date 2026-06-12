@@ -1279,7 +1279,7 @@ function _buildTextMap() {
     acceptNode(n) {
       const el = n.parentElement;
       if (!el) return NodeFilter.FILTER_REJECT;
-      if (el.closest('#comment-panel,#c-sel-tip,script,style,noscript,mark.c-hl'))
+      if (el.closest('#comment-panel,#c-sel-tip,script,style,noscript'))
         return NodeFilter.FILTER_REJECT;
       return NodeFilter.FILTER_ACCEPT;
     }
