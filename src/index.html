@@ -354,6 +354,49 @@ body { font-family: var(--font-sans); background: var(--bg); color: var(--ink); 
 .s6 .sscard-header { background: var(--s6-bg); }
 /* Gate card */
 .gate .card-header { background: var(--rawa-grey-200); }
+
+/* ── Comment count badge on stage nav ── */
+.stage-count-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: var(--fw-extrabold);
+  min-width: 16px; height: 16px; border-radius: var(--r-pill);
+  background: var(--rawa-navy); color: white;
+  padding: 0 4px; margin-left: 5px; line-height: 1; vertical-align: middle;
+}
+.stage-btn.active .stage-count-badge { background: rgba(255,255,255,0.3); }
+
+/* ── Resolved comments ── */
+.c-resolved-tag {
+  font-size: 9px; font-weight: var(--fw-extrabold); letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--rawa-forest-green);
+  background: var(--rawa-mint-30); border-radius: var(--r-xs); padding: 1px 6px;
+}
+.c-item.c-resolved { opacity: 0.55; }
+.c-item.c-resolved .c-text { text-decoration: line-through; color: var(--ink3); }
+.c-toggle-resolved {
+  background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.8);
+  border: 1px solid rgba(255,255,255,0.25); border-radius: var(--r-pill);
+  font-family: var(--font-sans); font-size: 11px; font-weight: var(--fw-semibold);
+  padding: 3px 10px; cursor: pointer; white-space: nowrap;
+}
+.c-toggle-resolved:hover { background: rgba(255,255,255,0.22); }
+
+/* ── Print ── */
+@media print {
+  .site-header { position: static; background: none !important; color: #000; border-bottom: 1px solid #ccc; box-shadow: none; }
+  .site-title { color: #000 !important; }
+  .mode-tabs { display: none !important; }
+  .stage-nav { display: none !important; }
+  #comment-fab { display: none !important; }
+  #comment-panel { display: none !important; }
+  #c-sel-tip { display: none !important; }
+  .stage-view { display: none !important; }
+  .stage-view.visible { display: block !important; padding: 16px; max-width: none; }
+  .card { box-shadow: none !important; border: 1px solid #ddd; break-inside: avoid; margin-bottom: 16px; }
+  .card-body { display: block !important; }
+  .card-section.left { border-right: none !important; }
+  a[href]::after { content: none !important; }
+}
 </style>
 </head>
 <body>
@@ -371,14 +414,14 @@ body { font-family: var(--font-sans); background: var(--bg); color: var(--ink); 
 <!-- STAGE NAV -->
 <nav class="stage-nav">
   <div class="stage-group">
-    <button class="stage-btn s0 active" onclick="maybeShowStage('overview')">Overview</button>
-    <button class="stage-btn s0" onclick="maybeShowStage('s0')">0 · Awareness &amp; Prioritisation</button>
-    <button class="stage-btn s1" onclick="maybeShowStage('s1')">1 · Research</button>
-    <button class="stage-btn s2" onclick="maybeShowStage('s2')">2 · Define</button>
-    <button class="stage-btn s3" onclick="maybeShowStage('s3')">3 · Ideate &amp; Design</button>
-    <button class="stage-btn s4" onclick="maybeShowStage('s4')">4 · Measure &amp; De-Risk</button>
-    <button class="stage-btn s5" onclick="maybeShowStage('s5')">5 · Develop &amp; Deploy</button>
-    <button class="stage-btn s6" onclick="maybeShowStage('s6')">6 · Embed &amp; CI</button>
+    <button class="stage-btn s0 active" data-stage="overview" onclick="maybeShowStage('overview')">Overview</button>
+    <button class="stage-btn s0" data-stage="s0" onclick="maybeShowStage('s0')">0 · Awareness &amp; Prioritisation</button>
+    <button class="stage-btn s1" data-stage="s1" onclick="maybeShowStage('s1')">1 · Research</button>
+    <button class="stage-btn s2" data-stage="s2" onclick="maybeShowStage('s2')">2 · Define</button>
+    <button class="stage-btn s3" data-stage="s3" onclick="maybeShowStage('s3')">3 · Ideate &amp; Design</button>
+    <button class="stage-btn s4" data-stage="s4" onclick="maybeShowStage('s4')">4 · Measure &amp; De-Risk</button>
+    <button class="stage-btn s5" data-stage="s5" onclick="maybeShowStage('s5')">5 · Develop &amp; Deploy</button>
+    <button class="stage-btn s6" data-stage="s6" onclick="maybeShowStage('s6')">6 · Embed &amp; CI</button>
   </div>
 </nav>
 
@@ -1002,6 +1045,8 @@ const GATE_OPT_CLASS = {proceed:'go-proceed',repeat:'go-repeat',descope:'go-desc
 // ═══════════════════════════════════════════════════════════
 
 let currentMode = 'ref';
+let _popstateActive = false;
+let _firstNavDone = false;
 
 function setMode(m) {
   currentMode = m;
@@ -1014,11 +1059,20 @@ function setMode(m) {
 function showStage(id) {
   document.querySelectorAll('.stage-view').forEach(v=>v.classList.remove('visible'));
   document.getElementById('view-'+(id==='overview'?'overview':id)).classList.add('visible');
-  document.querySelectorAll('.stage-btn').forEach(b=>{
-    b.classList.toggle('active', b.textContent.trim().startsWith(id==='overview'?'Overview':id.replace('s','')+'·')||
-      (id==='overview'&&b.textContent==='Overview'));
+  document.querySelectorAll('.stage-btn[data-stage]').forEach(b=>{
+    b.classList.toggle('active', b.dataset.stage === id);
   });
   window.scrollTo(0,0);
+  if (!_popstateActive) {
+    const url = new URL(location.href);
+    url.searchParams.set('stage', id);
+    if (_firstNavDone) {
+      history.pushState({stage: id}, '', url);
+    } else {
+      history.replaceState({stage: id}, '', url);
+      _firstNavDone = true;
+    }
+  }
 }
 
 // Build summary cards for overview
@@ -1181,8 +1235,8 @@ STAGES.forEach(s=>{
   viewsEl.appendChild(view);
 });
 
-// Init
-showStage('overview');
+// Init — navigate to stage from URL param, or default to overview
+showStage(new URLSearchParams(location.search).get('stage') || 'overview');
 
 // ═══════════════════════════════════════════════════════════
 // COMMENTS
@@ -1196,6 +1250,7 @@ const ALLOWED_DOMAIN = '@relationshipswa.org.au';
 let currentStage = 'overview';
 let commentsOpen = false;
 let currentUser = null;
+let _detectedEmail = null;
 let pendingAnchor = null;
 let _selRange = null;
 
@@ -1303,9 +1358,29 @@ function _buildTextMap() {
 
 function _applyOneHighlight(anchor, commentId) {
   const map = _buildTextMap();
-  const idx = map.text.indexOf(anchor.quote);
-  if (idx === -1) return;
-  const start = idx, end = idx + anchor.quote.length;
+  if (!anchor.quote) return;
+
+  // Collect all occurrences of the quoted text
+  const matches = [];
+  let pos = 0;
+  while ((pos = map.text.indexOf(anchor.quote, pos)) !== -1) { matches.push(pos); pos++; }
+  if (matches.length === 0) return;
+
+  // When there are multiple matches, use stored prefix/suffix context to pick the right one
+  let start;
+  if (matches.length === 1) {
+    start = matches[0];
+  } else {
+    const pre = (anchor.prefix || '').slice(-20);
+    const suf = (anchor.suffix || '').slice(0, 20);
+    start = matches.find(m => {
+      const before = map.text.slice(Math.max(0, m - 20), m);
+      const after  = map.text.slice(m + anchor.quote.length, m + anchor.quote.length + 20);
+      return (!pre || before.includes(pre)) && (!suf || after.includes(suf));
+    }) ?? matches[0];
+  }
+
+  const end = start + anchor.quote.length;
   for (let i = 0; i < map.nodes.length; i++) {
     const ns = map.offsets[i];
     const ne = ns + map.nodes[i].textContent.length;
@@ -1364,6 +1439,7 @@ async function initAuth() {
     const principal = data.clientPrincipal;
     if (principal && principal.userDetails) {
       const email = principal.userDetails.toLowerCase();
+      _detectedEmail = principal.userDetails;
       currentUser = email.endsWith(ALLOWED_DOMAIN) ? principal.userDetails : '__wrong_domain__';
     }
   } catch(e) {
@@ -1379,6 +1455,8 @@ function updateAuthUI() {
   if (!prompt || !form) return;
 
   if (currentUser === '__wrong_domain__') {
+    const emailEl = document.getElementById('c-denied-email');
+    if (emailEl && _detectedEmail) emailEl.textContent = `Signed in as: ${_detectedEmail}`;
     prompt.style.display = 'none';
     denied.style.display = 'flex';
     form.style.display   = 'none';
@@ -1431,22 +1509,31 @@ async function loadComments(stage) {
     clearHighlights();
     if (!data.length) {
       list.innerHTML = '<div class="c-empty">No comments yet for this stage.</div>';
+      _updateResolvedToggle(0);
       return;
     }
     list.innerHTML = data.map(c => `
-      <div class="c-item" data-cid="${esc(c.id)}">
+      <div class="c-item${c.resolved ? ' c-resolved' : ''}" data-cid="${esc(c.id)}">
         ${c.quote ? `<div class="c-quote">${esc(c.quote)}</div>` : ''}
         <div class="c-meta">
           <span class="c-author">${esc(c.author)}</span>
           <span class="c-time">${formatDate(c.createdAt)}</span>
+          ${c.resolved ? `<span class="c-resolved-tag">resolved</span>` : ''}
         </div>
         <div class="c-text">${esc(c.text)}</div>
-        ${c.author === currentUser ? `
         <div class="c-actions">
+          ${currentUser ? `<button class="c-action-btn" onclick="resolveComment('${c.id}','${c.stage}')">${c.resolved ? 'Reopen' : 'Resolve'}</button>` : ''}
+          ${c.author === currentUser ? `
           <button class="c-action-btn" onclick="editComment('${c.id}','${c.stage}')">Edit</button>
-          <button class="c-action-btn c-action-del" onclick="deleteComment('${c.id}','${c.stage}')">Delete</button>
-        </div>` : ''}
+          <button class="c-action-btn c-action-del" onclick="deleteComment('${c.id}','${c.stage}')">Delete</button>` : ''}
+        </div>
       </div>`).join('');
+    // Apply show/hide for resolved comments
+    const resolvedCount = data.filter(c => c.resolved).length;
+    _updateResolvedToggle(resolvedCount);
+    if (!showResolved) {
+      list.querySelectorAll('.c-item.c-resolved').forEach(el => el.style.display = 'none');
+    }
     list.scrollTop = list.scrollHeight;
     data.filter(c => c.quote).forEach(c => {
       const el = list.querySelector(`.c-item[data-cid="${c.id}"]`);
@@ -1480,6 +1567,7 @@ async function submitComment(e) {
       document.getElementById('c-text').value = '';
       clearPendingAnchor();
       await loadComments(currentStage);
+      loadNavCounts();
     } else {
       alert('Could not post comment — please try again.');
     }
@@ -1553,11 +1641,67 @@ async function deleteComment(id, stage) {
       `${COMMENTS_API}/${id}?stage=${encodeURIComponent(stage)}&author=${encodeURIComponent(currentUser)}`,
       { method: 'DELETE' }
     );
-    if (res.ok) { await loadComments(currentStage); }
+    if (res.ok) { await loadComments(currentStage); loadNavCounts(); }
     else { alert('Could not delete comment.'); }
   } catch(e) {
     alert('Could not reach the API.');
   }
+}
+
+async function resolveComment(id, stage) {
+  try {
+    const res = await fetch(
+      `${COMMENTS_API}/${id}/resolve?stage=${encodeURIComponent(stage)}&author=${encodeURIComponent(currentUser || '')}`,
+      { method: 'POST' }
+    );
+    if (res.ok) { await loadComments(currentStage); loadNavCounts(); }
+    else { alert('Could not update comment.'); }
+  } catch(e) {
+    alert('Could not reach the API.');
+  }
+}
+
+let showResolved = false;
+
+function toggleShowResolved() {
+  showResolved = !showResolved;
+  const btn = document.getElementById('c-toggle-resolved');
+  if (btn) btn.textContent = showResolved ? 'Hide resolved' : _resolvedToggleLabel;
+  document.querySelectorAll('#comment-list .c-item.c-resolved').forEach(el => {
+    el.style.display = showResolved ? '' : 'none';
+  });
+}
+
+let _resolvedToggleLabel = '';
+function _updateResolvedToggle(count) {
+  const btn = document.getElementById('c-toggle-resolved');
+  if (!btn) return;
+  if (count === 0) {
+    btn.style.display = 'none';
+  } else {
+    btn.style.display = '';
+    _resolvedToggleLabel = `Show ${count} resolved`;
+    btn.textContent = showResolved ? 'Hide resolved' : _resolvedToggleLabel;
+  }
+}
+
+async function loadNavCounts() {
+  try {
+    const res = await fetch(`${COMMENTS_API}/counts`);
+    if (!res.ok) return;
+    const counts = await res.json();
+    document.querySelectorAll('.stage-btn[data-stage]').forEach(btn => {
+      const n = counts[btn.dataset.stage] || 0;
+      const existing = btn.querySelector('.stage-count-badge');
+      if (existing) existing.remove();
+      if (n > 0) {
+        const badge = document.createElement('span');
+        badge.className = 'stage-count-badge';
+        badge.textContent = n;
+        btn.appendChild(badge);
+      }
+    });
+  } catch(e) {}
 }
 
 function esc(str) {
@@ -1742,8 +1886,13 @@ mark.c-hl:hover, mark.c-hl.c-hl-active { background: rgba(245, 158, 11, 0.45); }
 
 <div id="comment-panel">
   <div class="c-panel-header">
-    <div class="c-panel-title">Comments — <span id="comment-stage-label">Overview</span></div>
-    <div class="c-panel-sub">Visible to the RAWA team.</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+      <div>
+        <div class="c-panel-title">Comments — <span id="comment-stage-label">Overview</span></div>
+        <div class="c-panel-sub">Visible to the RAWA team.</div>
+      </div>
+      <button id="c-toggle-resolved" class="c-toggle-resolved" onclick="toggleShowResolved()" style="display:none">Show resolved</button>
+    </div>
   </div>
   <div id="comment-list"></div>
   <div id="c-auth-prompt" class="c-auth-box" style="display:none">
@@ -1751,7 +1900,7 @@ mark.c-hl:hover, mark.c-hl.c-hl-active { background: rgba(245, 158, 11, 0.45); }
     <a href="/.auth/login/aad?post_login_redirect_uri=/" class="c-auth-btn">Sign in with Microsoft</a>
   </div>
   <div id="c-auth-denied" class="c-auth-box" style="display:none">
-    <p class="c-auth-msg">Only @relationshipswa.org.au accounts can comment.</p>
+    <p class="c-auth-msg">Only @relationshipswa.org.au accounts can comment.<br><small id="c-denied-email" style="opacity:0.7"></small></p>
     <a href="/.auth/logout?post_logout_redirect_uri=/" class="c-auth-btn">Sign out</a>
   </div>
   <form id="c-form" class="c-form" onsubmit="submitComment(event)" style="display:none">
@@ -1772,6 +1921,13 @@ mark.c-hl:hover, mark.c-hl.c-hl-active { background: rgba(245, 158, 11, 0.45); }
 `);
 initAuth();
 initSelection();
+loadNavCounts();
+
+window.addEventListener('popstate', e => {
+  _popstateActive = true;
+  window.showStage(e.state?.stage || new URLSearchParams(location.search).get('stage') || 'overview');
+  _popstateActive = false;
+});
 </script>
 </body>
 </html>

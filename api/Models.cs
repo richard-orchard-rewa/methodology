@@ -17,6 +17,8 @@ public class CommentEntity : ITableEntity
     public string Quote { get; set; } = "";
     public string Prefix { get; set; } = "";
     public string Suffix { get; set; } = "";
+    public bool Resolved { get; set; } = false;
+    public string ResolvedBy { get; set; } = "";
 }
 
 // ── API request/response DTOs ────────────────────────────────────────────
@@ -47,4 +49,6 @@ public class CommentResponse
     public string? Quote { get; set; }
     public string? Prefix { get; set; }
     public string? Suffix { get; set; }
+    public bool Resolved { get; set; }
+    public string? ResolvedBy { get; set; }
 }

@@ -3,6 +3,7 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 using System.Net;
+using System.Text;
 using System.Text.Json;
 using System.Web;
 
@@ -41,6 +42,28 @@ public class CommentsFunction
         results.Sort((a, b) => DateTimeOffset.Compare(a.CreatedAt, b.CreatedAt));
 
         return await OkJson(req, results);
+    }
+
+    // ── GET /api/comments/counts ─────────────────────────────────────────
+    // Returns unresolved comment counts per stage: { "s0": 2, "s1": 5, ... }
+    [Function("GetCommentCounts")]
+    public async Task<HttpResponseData> GetCommentCounts(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "comments/counts")] HttpRequestData req)
+    {
+        var client = GetTableClient();
+        var counts = new Dictionary<string, int>();
+
+        await foreach (var entity in client.QueryAsync<TableEntity>(
+            select: new[] { "PartitionKey", "Resolved" }))
+        {
+            var pk = entity.PartitionKey;
+            if (string.IsNullOrEmpty(pk)) continue;
+            var resolved = entity.GetBoolean("Resolved") ?? false;
+            if (!resolved)
+                counts[pk] = counts.TryGetValue(pk, out var c) ? c + 1 : 1;
+        }
+
+        return await OkJson(req, counts);
     }
 
     // ── POST /api/comments ───────────────────────────────────────────────
@@ -84,6 +107,101 @@ public class CommentsFunction
         return created;
     }
 
+    // ── PUT /api/comments/{id} ───────────────────────────────────────────
+    [Function("EditComment")]
+    public async Task<HttpResponseData> EditComment(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "comments/{id}")] HttpRequestData req,
+        string id)
+    {
+        var body = await req.ReadAsStringAsync() ?? "";
+        var dto  = JsonSerializer.Deserialize<EditCommentRequest>(body, JsonOpts);
+
+        if (dto is null || string.IsNullOrWhiteSpace(dto.Stage) || string.IsNullOrWhiteSpace(dto.Text))
+            return await BadRequest(req, "stage and text are required.");
+
+        // Authoritative identity from Static Web Apps auth header; fall back to body for local dev
+        var callerEmail = GetCallerEmail(req) ?? dto.Author ?? "";
+        if (string.IsNullOrWhiteSpace(callerEmail))
+            return await BadRequest(req, "Authentication required.");
+
+        var client = GetTableClient();
+        CommentEntity entity;
+        try { entity = await client.GetEntityAsync<CommentEntity>(dto.Stage, id); }
+        catch { return req.CreateResponse(HttpStatusCode.NotFound); }
+
+        if (!string.Equals(entity.Author, callerEmail, StringComparison.OrdinalIgnoreCase))
+            return await BadRequest(req, "You can only edit your own comments.");
+
+        entity.Text = dto.Text.Trim();
+        await client.UpdateEntityAsync(entity, entity.ETag, TableUpdateMode.Replace);
+        _log.LogInformation("Comment edited: stage={Stage} id={Id}", dto.Stage, id);
+
+        return await OkJson(req, ToResponse(entity));
+    }
+
+    // ── DELETE /api/comments/{id}?stage=s1 ──────────────────────────────
+    [Function("DeleteComment")]
+    public async Task<HttpResponseData> DeleteComment(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "comments/{id}")] HttpRequestData req,
+        string id)
+    {
+        var qs    = HttpUtility.ParseQueryString(req.Url.Query);
+        var stage = qs["stage"] ?? "";
+
+        if (string.IsNullOrWhiteSpace(stage))
+            return await BadRequest(req, "stage is required.");
+
+        // Authoritative identity from Static Web Apps auth header; fall back to query param for local dev
+        var callerEmail = GetCallerEmail(req) ?? qs["author"] ?? "";
+        if (string.IsNullOrWhiteSpace(callerEmail))
+            return await BadRequest(req, "Authentication required.");
+
+        var client = GetTableClient();
+        CommentEntity entity;
+        try { entity = await client.GetEntityAsync<CommentEntity>(stage, id); }
+        catch { return req.CreateResponse(HttpStatusCode.NotFound); }
+
+        if (!string.Equals(entity.Author, callerEmail, StringComparison.OrdinalIgnoreCase))
+            return await BadRequest(req, "You can only delete your own comments.");
+
+        await client.DeleteEntityAsync(stage, id, entity.ETag);
+        _log.LogInformation("Comment deleted: stage={Stage} id={Id}", stage, id);
+
+        var res = req.CreateResponse(HttpStatusCode.NoContent);
+        AddCors(res);
+        return res;
+    }
+
+    // ── POST /api/comments/{id}/resolve?stage=s1 ────────────────────────
+    // Toggles the resolved flag. Any authenticated team member can resolve.
+    [Function("ResolveComment")]
+    public async Task<HttpResponseData> ResolveComment(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "comments/{id}/resolve")] HttpRequestData req,
+        string id)
+    {
+        var qs    = HttpUtility.ParseQueryString(req.Url.Query);
+        var stage = qs["stage"] ?? "";
+
+        if (string.IsNullOrWhiteSpace(stage))
+            return await BadRequest(req, "stage is required.");
+
+        var callerEmail = GetCallerEmail(req) ?? qs["author"] ?? "";
+        if (string.IsNullOrWhiteSpace(callerEmail))
+            return await BadRequest(req, "Authentication required.");
+
+        var client = GetTableClient();
+        CommentEntity entity;
+        try { entity = await client.GetEntityAsync<CommentEntity>(stage, id); }
+        catch { return req.CreateResponse(HttpStatusCode.NotFound); }
+
+        entity.Resolved   = !entity.Resolved;
+        entity.ResolvedBy = entity.Resolved ? callerEmail : "";
+        await client.UpdateEntityAsync(entity, entity.ETag, TableUpdateMode.Replace);
+        _log.LogInformation("Comment resolve toggled: stage={Stage} id={Id} resolved={Resolved}", stage, id, entity.Resolved);
+
+        return await OkJson(req, ToResponse(entity));
+    }
+
     // ── OPTIONS /api/comments  (CORS preflight) ──────────────────────────
     [Function("OptionsComments")]
     public HttpResponseData Options(
@@ -96,64 +214,38 @@ public class CommentsFunction
         return res;
     }
 
-    // ── DELETE /api/comments/{id}?stage=s1&author=email ─────────────────
-    [Function("DeleteComment")]
-    public async Task<HttpResponseData> DeleteComment(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "comments/{id}")] HttpRequestData req,
-        string id)
+    // ── OPTIONS /api/comments/{id} and /api/comments/{id}/resolve ───────
+    [Function("OptionsCommentsId")]
+    public HttpResponseData OptionsId(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "options", Route = "comments/{rest}")] HttpRequestData req,
+        string rest)
     {
-        var qs     = HttpUtility.ParseQueryString(req.Url.Query);
-        var stage  = qs["stage"]  ?? "";
-        var author = qs["author"] ?? "";
-
-        if (string.IsNullOrWhiteSpace(stage) || string.IsNullOrWhiteSpace(author))
-            return await BadRequest(req, "stage and author are required.");
-
-        var client = GetTableClient();
-        CommentEntity entity;
-        try { entity = await client.GetEntityAsync<CommentEntity>(stage, id); }
-        catch { return req.CreateResponse(HttpStatusCode.NotFound); }
-
-        if (!string.Equals(entity.Author, author, StringComparison.OrdinalIgnoreCase))
-            return await BadRequest(req, "You can only delete your own comments.");
-
-        await client.DeleteEntityAsync(stage, id, entity.ETag);
-        _log.LogInformation("Comment deleted: stage={Stage} id={Id}", stage, id);
-
-        var res = req.CreateResponse(HttpStatusCode.NoContent);
+        var res = req.CreateResponse(HttpStatusCode.OK);
         AddCors(res);
+        res.Headers.Add("Access-Control-Allow-Methods", "GET, PUT, DELETE, POST, OPTIONS");
+        res.Headers.Add("Access-Control-Allow-Headers", "Content-Type");
         return res;
     }
 
-    // ── PUT /api/comments/{id} ───────────────────────────────────────────
-    [Function("EditComment")]
-    public async Task<HttpResponseData> EditComment(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "comments/{id}")] HttpRequestData req,
-        string id)
+    // ── Helpers ──────────────────────────────────────────────────────────
+
+    // Read the authenticated user's email from the Azure Static Web Apps principal header.
+    // Returns null when the header is absent (e.g. local dev without the SWA emulator).
+    private static string? GetCallerEmail(HttpRequestData req)
     {
-        var body = await req.ReadAsStringAsync() ?? "";
-        var dto  = JsonSerializer.Deserialize<EditCommentRequest>(body, JsonOpts);
-
-        if (dto is null || string.IsNullOrWhiteSpace(dto.Stage) ||
-            string.IsNullOrWhiteSpace(dto.Author) || string.IsNullOrWhiteSpace(dto.Text))
-            return await BadRequest(req, "stage, author and text are required.");
-
-        var client = GetTableClient();
-        CommentEntity entity;
-        try { entity = await client.GetEntityAsync<CommentEntity>(dto.Stage, id); }
-        catch { return req.CreateResponse(HttpStatusCode.NotFound); }
-
-        if (!string.Equals(entity.Author, dto.Author, StringComparison.OrdinalIgnoreCase))
-            return await BadRequest(req, "You can only edit your own comments.");
-
-        entity.Text = dto.Text.Trim();
-        await client.UpdateEntityAsync(entity, entity.ETag, TableUpdateMode.Replace);
-        _log.LogInformation("Comment edited: stage={Stage} id={Id}", dto.Stage, id);
-
-        return await OkJson(req, ToResponse(entity));
+        if (!req.Headers.TryGetValues("x-ms-client-principal", out var vals))
+            return null;
+        var encoded = vals.FirstOrDefault();
+        if (string.IsNullOrEmpty(encoded)) return null;
+        try
+        {
+            var json = Encoding.UTF8.GetString(Convert.FromBase64String(encoded));
+            using var doc = JsonDocument.Parse(json);
+            return doc.RootElement.GetProperty("userDetails").GetString();
+        }
+        catch { return null; }
     }
 
-    // ── Helpers ──────────────────────────────────────────────────────────
     private static TableClient GetTableClient()
     {
         var conn = Environment.GetEnvironmentVariable("AzureWebJobsStorage")
@@ -185,13 +277,15 @@ public class CommentsFunction
 
     private static CommentResponse ToResponse(CommentEntity e) => new()
     {
-        Id        = e.RowKey,
-        Stage     = e.PartitionKey,
-        Author    = e.Author,
-        Text      = e.Text,
-        CreatedAt = e.CreatedAt,
-        Quote     = string.IsNullOrEmpty(e.Quote)  ? null : e.Quote,
-        Prefix    = string.IsNullOrEmpty(e.Prefix) ? null : e.Prefix,
-        Suffix    = string.IsNullOrEmpty(e.Suffix) ? null : e.Suffix
+        Id         = e.RowKey,
+        Stage      = e.PartitionKey,
+        Author     = e.Author,
+        Text       = e.Text,
+        CreatedAt  = e.CreatedAt,
+        Quote      = string.IsNullOrEmpty(e.Quote)      ? null : e.Quote,
+        Prefix     = string.IsNullOrEmpty(e.Prefix)     ? null : e.Prefix,
+        Suffix     = string.IsNullOrEmpty(e.Suffix)     ? null : e.Suffix,
+        Resolved   = e.Resolved,
+        ResolvedBy = string.IsNullOrEmpty(e.ResolvedBy) ? null : e.ResolvedBy,
     };
 }
