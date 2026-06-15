@@ -778,7 +778,7 @@ function _buildTextMap() {
   return { nodes, offsets, text };
 }
 
-function _applyOneHighlight(anchor, commentId) {
+function _applyOneHighlight(anchor, commentId, author) {
   const map = _buildTextMap();
   if (!anchor.quote) return;
 
@@ -815,6 +815,10 @@ function _applyOneHighlight(anchor, commentId) {
     const mark = document.createElement('mark');
     mark.className = 'c-hl';
     mark.dataset.cid = commentId;
+    const col = _authorColor(author || '');
+    mark.style.setProperty('--hl-bg', col.bg);
+    mark.style.setProperty('--hl-bd', col.bd);
+    mark.style.setProperty('--hl-hv', col.hover);
     mark.addEventListener('click', () => openCommentById(commentId));
     mark.textContent = txt.substring(oS, oE);
     const frag = document.createDocumentFragment();
@@ -835,7 +839,7 @@ function clearHighlights() {
 
 function applyHighlights(comments) {
   clearHighlights();
-  comments.filter(c => c.quote).forEach(c => _applyOneHighlight(c, c.id));
+  comments.filter(c => c.quote).forEach(c => _applyOneHighlight(c, c.id, c.author));
 }
 
 function openCommentById(id) {
@@ -1243,11 +1247,15 @@ document.body.insertAdjacentHTML('beforeend', `
 }
 #c-sel-tip:hover { background: var(--rawa-blue); }
 mark.c-hl {
-  background: rgba(255, 213, 79, 0.35);
-  border-bottom: 2px solid rgba(245, 158, 11, 0.8);
+  background: var(--hl-bg, rgba(255,213,79,.35));
+  border-bottom: 2px solid var(--hl-bd, rgba(245,158,11,.8));
   border-radius: 2px; cursor: pointer; padding: 0 1px;
 }
-mark.c-hl:hover, mark.c-hl.c-hl-active { background: rgba(245, 158, 11, 0.45); }
+mark.c-hl:hover, mark.c-hl.c-hl-active { background: var(--hl-hv, rgba(245,158,11,.5)); }
+.c-author-dot {
+  display: inline-block; width: 8px; height: 8px; border-radius: 2px;
+  flex-shrink: 0; margin-right: 5px; vertical-align: middle;
+}
 .c-quote {
   font-size: 11px; color: var(--ink3); font-style: italic;
   border-left: 3px solid var(--rawa-blue); padding: 3px 8px;
