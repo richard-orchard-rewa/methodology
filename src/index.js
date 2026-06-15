@@ -941,7 +941,7 @@ async function loadComments(stage) {
       <div class="c-item${c.resolved ? ' c-resolved' : ''}" data-cid="${esc(c.id)}">
         ${c.quote ? `<div class="c-quote">${esc(c.quote)}</div>` : ''}
         <div class="c-meta">
-          <span class="c-author">${esc(c.author)}</span>
+          <span class="c-author-dot" style="background:${_authorColor(c.author).bd}"></span><span class="c-author">${esc(c.author)}</span>
           <span class="c-time">${formatDate(c.createdAt)}</span>
           ${c.resolved ? `<span class="c-resolved-tag">resolved</span>` : ''}
         </div>
