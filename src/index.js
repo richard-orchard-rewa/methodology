@@ -654,6 +654,21 @@ const COMMENTS_API = location.hostname === 'localhost'
   : 'https://methodology-api.azurewebsites.net/api/comments';
 const ALLOWED_DOMAIN = '@relationshipswa.org.au';
 
+const _HL_PALETTE = [
+  { bg:'rgba(255,213,79,.35)',  bd:'rgba(245,158,11,.8)',  hover:'rgba(245,158,11,.5)'  }, // yellow
+  { bg:'rgba(134,239,172,.35)', bd:'rgba(34,197,94,.8)',   hover:'rgba(34,197,94,.5)'   }, // green
+  { bg:'rgba(147,197,253,.35)', bd:'rgba(59,130,246,.8)',  hover:'rgba(59,130,246,.5)'  }, // blue
+  { bg:'rgba(216,180,254,.35)', bd:'rgba(168,85,247,.8)',  hover:'rgba(168,85,247,.5)'  }, // purple
+  { bg:'rgba(253,186,116,.35)', bd:'rgba(249,115,22,.8)',  hover:'rgba(249,115,22,.5)'  }, // orange
+  { bg:'rgba(94,234,212,.35)',  bd:'rgba(20,184,166,.8)',  hover:'rgba(20,184,166,.5)'  }, // teal
+];
+
+function _authorColor(author) {
+  let h = 0;
+  for (let i = 0; i < author.length; i++) h = (h * 31 + author.charCodeAt(i)) >>> 0;
+  return _HL_PALETTE[h % _HL_PALETTE.length];
+}
+
 let currentStage = new URLSearchParams(location.search).get('stage') || 'overview';
 let commentsOpen = false;
 let currentUser = null;
