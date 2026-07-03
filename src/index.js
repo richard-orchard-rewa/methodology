@@ -1129,6 +1129,58 @@ async function loadNavCounts() {
   } catch(e) {}
 }
 
+async function downloadCommentsCSV() {
+  const btn = document.getElementById('c-export-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '…'; }
+
+  const stages = ['overview','s0','s1','s2','s3','s4','s5','s6'];
+  const stageLabels = { overview:'Overview', s0:'Stage 0', s1:'Stage 1', s2:'Stage 2',
+                        s3:'Stage 3', s4:'Stage 4', s5:'Stage 5', s6:'Stage 6' };
+
+  try {
+    const results = await Promise.all(stages.map(async s => {
+      try {
+        const res = await fetch(`${COMMENTS_API}?stage=${encodeURIComponent(s)}`);
+        return res.ok ? (await res.json()).map(c => ({ ...c, _stageLabel: stageLabels[s] || s })) : [];
+      } catch(_) { return []; }
+    }));
+
+    const all = results.flat().sort((a, b) => {
+      const si = stages.indexOf(a.stage) - stages.indexOf(b.stage);
+      return si !== 0 ? si : new Date(a.createdAt) - new Date(b.createdAt);
+    });
+
+    if (all.length === 0) { alert('No comments found.'); return; }
+
+    const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const headers = ['Stage','Author','Date','Highlighted text','Comment','Resolved','Resolved by'];
+    const rows = all.map(c => [
+      q(c._stageLabel),
+      q(c.author),
+      q(formatDate(c.createdAt)),
+      q(c.quote || ''),
+      q(c.text),
+      q(c.resolved ? 'Yes' : 'No'),
+      q(c.resolvedBy || ''),
+    ].join(','));
+
+    const csv = [headers.map(q).join(','), ...rows].join('\r\n');
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `rawa-comments-${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch(e) {
+    alert('Could not export comments.');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '↓ CSV'; }
+  }
+}
+
 function esc(str) {
   return String(str)
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
@@ -1282,6 +1334,14 @@ mark.c-hl:hover, mark.c-hl.c-hl-active { background: var(--hl-hv, rgba(245,158,1
   cursor: pointer; padding: 0 2px; line-height: 1; flex-shrink: 0;
 }
 .c-panel-close:hover { color: white; }
+.c-export-btn {
+  background: none; border: 1px solid rgba(255,255,255,0.35); border-radius: var(--r-pill);
+  color: rgba(255,255,255,0.8); font-size: 11px; font-weight: var(--fw-semibold);
+  font-family: var(--font-sans); cursor: pointer; padding: 3px 9px; flex-shrink: 0;
+  transition: border-color 0.15s, color 0.15s;
+}
+.c-export-btn:hover { border-color: rgba(255,255,255,0.8); color: white; }
+.c-export-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .c-quote-clear {
   font-size: 11px; color: var(--ink3); background: none;
   border: none; cursor: pointer; padding: 0; font-family: var(--font-sans);
@@ -1327,6 +1387,7 @@ mark.c-hl:hover, mark.c-hl.c-hl-active { background: var(--hl-hv, rgba(245,158,1
       </div>
       <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
         <button id="c-toggle-resolved" class="c-toggle-resolved" onclick="toggleShowResolved()" style="display:none">Show resolved</button>
+        <button id="c-export-btn" class="c-export-btn" onclick="downloadCommentsCSV()" title="Download all comments as CSV">↓ CSV</button>
         <button class="c-panel-close" onclick="toggleComments()" title="Close">✕</button>
       </div>
     </div>
