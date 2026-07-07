@@ -153,6 +153,8 @@ body { font-family: var(--font-sans); background: var(--bg); color: var(--ink); 
 .tag-wrap { display: flex; flex-wrap: wrap; gap: 5px; }
 .tag { font-family: var(--font-sans); font-size: 11px; font-weight: var(--fw-semibold); padding: 3px 9px; border-radius: var(--r-xs); background: var(--rawa-grey-200); color: var(--rawa-navy); }
 .tag-optional { border: 1px dashed var(--rawa-grey-400); background: transparent; color: var(--ink3); font-weight: var(--fw-medium); }
+.tag-mandatory { border: 1px solid var(--rawa-navy); background: var(--rawa-aqua-30); color: var(--rawa-navy); font-weight: var(--fw-semibold); }
+.tag-shortlist { border: 1px dashed #C89010; background: var(--rawa-lemon-30, #FFF6DF); color: #7A5800; font-style: italic; }
 .p2-tag { font-size: 11px; font-weight: var(--fw-semibold); padding: 3px 9px; border-radius: var(--r-xs); border: 1px solid rgba(0,98,168,0.25); background: #EAF2FA; color: var(--rawa-blue); display: inline-flex; align-items: center; gap: 4px; }
 .p2-tag::before { content: 'P2'; font-size: 9px; font-weight: var(--fw-extrabold); background: var(--rawa-blue); color: white; padding: 1px 4px; border-radius: var(--r-xs); letter-spacing: 0.04em; }
 .p2-tag.update { border-color: rgba(140,90,10,0.25); background: #FAF3E4; color: var(--rawa-golden-sun); }
@@ -404,6 +406,7 @@ body { font-family: var(--font-sans); background: var(--bg); color: var(--ink); 
 <!-- SITE HEADER -->
 <header class="site-header">
   <span class="site-title">RAWA · Services Delivery Tech Upgrade · Methodology Reference</span>
+  <span style="font-size:10px;color:rgba(255,255,255,0.5);font-weight:600;letter-spacing:0.05em;margin-left:8px;">v2.0</span>
   <div class="mode-tabs">
     <button class="mode-tab active" onclick="setMode('ref')">Reference cards</button>
     <button class="mode-tab" onclick="setMode('play')">Playbook cards</button>

@@ -5,42 +5,40 @@ const STAGES = [
   // ── STAGE 0 ──
   {id:'s0',num:'STAGE 0',title:'Problem Awareness & Prioritisation',
    diamond:'Pre-process · Problem selection',mode:'Converge',duration:'As needed',
-   purpose:'Identify and score problems from the backlog before committing to research. The team reaches consensus on which problems are worth investigating based on evidence — not volume or instinct. Exec is informed and endorses direction.',
+   purpose:'Identify and score problems from the backlog before committing to research. The team reaches consensus on which problems are worth investigating based on evidence — not volume or instinct. SteerCo is informed and endorses direction.',
    questions:[
-     'Is this problem real and evidenced, or assumed?',
+     'Is this problem real and evidenced — does data exist to support the problem description, or is it assumed?',
      'Who does it affect — practitioners, service admins, clients, or a combination?',
      'How frequently do people interact with this problem?',
-     'How much pain does it cause per interaction?',
+     'How much pain does it cause per interaction — how does the client experience this, and what would be the benefit of solving it?',
      'What is the residual risk of not solving it?',
    ],
-   artifacts:['Problem backlog entry','Scoring matrix output (per user group: reach, frequency, pain, residual risk)','Prioritisation decision record'],
-   meetings:['Team prioritisation session (ad hoc, ~60 min)','Exec endorsement (present top problems, seek direction)'],
+   artifacts:[{text:'Problem backlog entry',type:'mandatory'},{text:'Scoring matrix output (per user group: reach, frequency, pain, residual risk)',type:'mandatory'},{text:'Prioritisation decision record',type:'mandatory'}],
+   meetings:['Team prioritisation session (ad hoc, ~60 min)','SteerCo endorsement (present top problems, seek direction)'],
    exercises:'E.g. problem scoring matrix (reach, frequency of interaction, pain per interaction, residual risk) — scored separately per user group. Effort is not a scoring variable at this stage.',
    comms:[
      {a:'Project team',w:'Decision record shared — which problems were prioritised, which user groups are most affected, and why.'},
-     {a:'Executive (CDO)',w:'Top prioritised problems presented for endorsement. Exec endorses direction — not a detailed approval, but confirms the team is focusing on the right things.'},
+     {a:'CDO / SteerCo',w:'Top prioritised problems presented for endorsement. SteerCo endorses direction — not a detailed approval, but confirms the team is focusing on the right things.'},
    ],
    gate:{q:'Are these the right problems to investigate?',
-     d:'Team has scored problems across user groups. A prioritised list is presented to the exec for endorsement before research begins.',
+     d:'Team has scored problems across user groups. A prioritised list is presented to the SteerCo for endorsement before research begins.',
      opts:[
-       {c:'proceed',i:'→',t:'Proceed to Research',desc:'Exec endorses the prioritised problems — team begins research.'},
-       {c:'repeat',i:'↺',t:'Re-prioritise',desc:'Exec challenges direction or insufficient evidence — re-score and re-present.'},
+       {c:'proceed',i:'→',t:'Proceed to Research',desc:'SteerCo endorses the prioritised problems — team begins research.'},
+       {c:'repeat',i:'↺',t:'Re-prioritise',desc:'SteerCo challenges direction or insufficient evidence — re-score and re-present.'},
        {c:'stop',i:'✕',t:'Stop',desc:'Problem not worth investigating right now — return to backlog.'},
      ],
-     who:'Team consensus · Exec endorsement (red gate) · Delivery Manager records.'},
+     who:'Team consensus · SteerCo endorsement (red gate) · Delivery Manager records.'},
    roles:[
      {r:'A',n:'Delivery Manager',d:'Facilitates prioritisation; presents to exec; records decision'},
      {r:'R',n:'BA / Service Designer',d:'Leads scoring exercise; presents evidence summary across user groups'},
      {r:'C',n:'BI & Change Manager',d:'Applies improvement lens to candidate problems'},
      {r:'C',n:'Tech Lead',d:'Flags feasibility constraints or dependencies early'},
      {r:'C',n:'SMEs',d:'Validate scoring — may be practitioners or service admins depending on the problem'},
-     {r:'I',n:'CDO',d:'Active team member; endorses prioritised problems in executive sponsor role'},
+     {r:'I',n:'CDO',d:'By invitation only — not a standing team member until the second workstream (or when specifically invited)'},
    ],
-   footer:'Gate type: Exec Approval (red gate). Exec endorses direction before research investment is committed.',
+   footer:'Gate type: SteerCo Approval (red gate). SteerCo endorses direction before research investment is committed.',
    p2:[
-     {doc:'Project Brief',action:'create',note:'The prioritisation decision record serves as the Project Brief — a lightweight document justifying the research investment.'},
-     {doc:'Business Case',action:'create',note:'A lightweight initial business case: what problem, why now, rough cost of research, expected benefit.'},
-     {doc:'Risk Register',action:'create',note:'Open the risk register. Capture known risks — scope assumptions, dependency risks, resource constraints.'},
+     {doc:'Risk Register',action:'create',note:'Open the risk register. Unlikely to generate much at this stage, but worth noting any insights from prior work that are relevant to this problem.'},
      {doc:'Lessons Log',action:'create',note:'Open the lessons log from the start. Capture what the team already knows from prior work that is relevant to this problem.'},
    ],
    before:['A backlog of problems exists with at least a brief description for each.','The team has capacity for a new research sprint.','No solution has been pre-selected — this is about picking the problem, not the answer.'],
@@ -49,13 +47,13 @@ const STAGES = [
      {n:2,a:'Score each problem',t:'~30 min',d:'Use the scoring matrix — rate each problem on Reach, Frequency of interaction, Pain per interaction, and Residual Risk. Score across user groups — practitioners, service admins, and clients may score differently for the same problem. Effort is not a scoring variable.'},
      {n:3,a:'Discuss and sense-check',t:'~20 min',d:'Numbers inform — they don\'t decide. Review scores as a team. Are there dependencies between problems? Is any problem actually two problems? SMEs validate that scores reflect reality, not assumptions.'},
      {n:4,a:'Select and scope',t:'~15 min',d:'Agree on the top problems to take into Research. Confirm which user groups are in scope. If a problem is too large, split it.'},
-     {n:5,a:'Present to exec for endorsement',t:'~30 min',d:'Present the prioritised list to the exec. This is not a detailed approval gate — it is confirming the team is focused on the right problems. Exec endorses direction or challenges it.'},
+     {n:5,a:'Present to SteerCo for endorsement',t:'~30 min',d:'Present the prioritised list to SteerCo. This is not a detailed approval gate — it is confirming the team is focused on the right problems. SteerCo endorses direction or challenges it.'},
      {n:6,a:'Record the decision',t:'~10 min',d:'Write a one-paragraph decision record: which problems were prioritised, why, which user groups are in scope, and any known constraints. File it.'},
    ],
    pitfalls:[
      {t:'Picking the loudest problem, not the most evidenced one',d:'The scoring matrix exists to give quieter, real problems a fair hearing. Require evidence for every score.'},
      {t:'Introducing effort as a scoring variable too early',d:'You don\'t know the effort yet — you haven\'t found the solution. Remove effort from prioritisation scoring. Use it only as a tiebreaker when problems score identically.'},
-     {t:'Treating exec endorsement as bureaucracy',d:'Exec visibility at this stage protects the team later. If priorities shift, you have a record of what was endorsed and when.'},
+     {t:'Treating exec endorsement as bureaucracy',d:'SteerCo visibility at this stage protects the team later. If priorities shift, you have a record of what was endorsed and when.'},
    ],
    done:['The team can explain why these problems, why now, and which user groups are most affected.','A decision record exists and is filed.','The exec has endorsed the prioritised problems.','The scope of Research is agreed before anyone starts planning fieldwork.'],
   },
@@ -69,20 +67,22 @@ const STAGES = [
      'What does the day-to-day actually look like for each group?',
      'Where do people lose time, dignity, or confidence?',
      'What constraints cannot be moved (clinical, legal, funding)?',
-     'Is this actually a technology problem — or a process, culture, or resourcing problem?',
+     'Is this actually a technology problem — or a process, culture, or resourcing problem — or a combination? What are the boundaries of what we\'re solving?',
+     'Which parts of the client journey does this affect (e.g. on the service blueprint)?',
    ],
-   artifacts:['Stakeholder & user map (across all three groups)','Interview notes / write-ups','Empathy maps per user group','Current-state journey map or process map','Data & evidence summary','Constraints register'],
+   artifacts:[{text:'Stakeholder & user map (across all three groups)',type:'optional'},{text:'Interview notes / write-ups',type:'optional'},{text:'Empathy maps per user group',type:'optional'},{text:'Current-state journey map or process map',type:'optional'},{text:'Data & evidence summary — qualitative or quantitative backing for the problem hypothesis',type:'mandatory'},{text:'Constraints register',type:'optional'},{text:'Blueprint update — check out all affected journey steps',type:'mandatory'}],
    meetings:['Weekly stand-up','Sprint show-and-tell','Shadowing / contextual inquiry sessions','Research debrief (team synthesis)'],
    exercises:'E.g. stakeholder mapping, contextual inquiry / shadowing, empathy maps, 5 Whys, desk research. Time-box research — aim for just enough evidence to frame the problem, not perfect coverage.',
    comms:[
      {a:'Service locations',w:'Advance notice before researchers visit — purpose, who is coming, what participation involves. Coordinate with practitioners and service admins separately.'},
      {a:'Service Admins',w:'Specifically briefed — their workflows are a primary research focus, not an afterthought.'},
      {a:'Clinical Supervisors',w:'Briefed before any practitioner or client research begins — confirm safe and appropriate approach to participant access.'},
-     {a:'Executive (CDO)',w:'Informed that research is underway; currently receiving as active team member.'},
+     {a:'CDO / SteerCo',w:'Informed that research is underway; currently receiving as active team member.'},
+     {a:'Organisation-wide',w:'Service blueprint updated — affected journey steps checked out at the start of research so the team is working from the live map.'},
    ],
    commsNote:'All participants — practitioners, service admins, and clients — should receive a plain-language summary of what the research is for and how their input will be used, before they agree to participate.',
    gate:{q:'Do we have enough to define the problem?',
-     d:'Internal team check. Team agrees findings are evidence-based and sufficient to attempt a problem statement. This is not an exec gate — the team decides.',
+     d:'Internal team check. Team agrees findings are evidence-based and sufficient to attempt a problem statement. This is not an SteerCo gate — the team decides.',
      opts:[
        {c:'proceed',i:'→',t:'Proceed to Define',desc:'Enough evidence gathered — team can attempt a problem statement.'},
        {c:'repeat',i:'↺',t:'More research needed',desc:'Key gaps remain — go back and fill them before defining.'},
@@ -95,12 +95,11 @@ const STAGES = [
      {r:'R',n:'SMEs',d:'Primary research participants — practitioners or service admins depending on the problem'},
      {r:'C',n:'BI & Change Manager',d:'Applies improvement lens; supports stakeholder engagement'},
      {r:'C',n:'Tech Lead',d:'Surfaces technical constraints early in research'},
-     {r:'I',n:'CDO',d:'Active team member; informed of research progress'},
+     {r:'I',n:'CDO',d:'By invitation only — joins as active member from the second workstream, or when specifically invited'},
    ],
-   footer:'Gate type: Internal Check (green gate). Team decides — no exec approval required at this transition.',
+   footer:'Gate type: Internal Check (green gate). Team decides — no SteerCo approval required at this transition.',
    p2:[
-     {doc:'Risk Register',action:'update',note:'Update with newly discovered constraints — clinical, legal, funding, technical. Research often surfaces risks that weren\'t visible at Stage 0.'},
-     {doc:'Business Case',action:'update',note:'Update to reflect what research found. If the problem is larger or different than expected, the business case needs to reflect that.'},
+     {doc:'Risk Register',action:'update',note:'Update with newly discovered constraints. Consider: clinical (consent, participant safety), legal (data, privacy), funding (cost model), technical (integration, infrastructure), and process-change risks. Research often surfaces risks that weren\'t visible at Stage 0.'},
      {doc:'Lessons Log',action:'update',note:'Log what the team learned about how to run research — access challenges, participant engagement, what worked and what didn\'t.'},
    ],
    before:['Prioritisation decision record exists with agreed scope.','Service locations and Clinical Supervisors have confirmed access for research.','Participant consent approach is agreed.','No solution has been sketched — the team has a shared beginner\'s mind.'],
@@ -128,19 +127,20 @@ const STAGES = [
    purpose:'Synthesise research into one sharply framed problem statement — validated by the people it describes. The output is a Problem Hypothesis: a clear statement with evidence, boundaries, and anti-goals. This is the foundation everything else builds on.',
    questions:[
      'Which patterns recur across what we heard?',
+     'Have we reviewed Voice of the Customer (VotC) data relevant to this problem?',
      'Who exactly are we designing for first?',
      'What is the one problem statement we will commit to?',
      'What are the boundaries — what are we explicitly NOT solving?',
      'What does success look like in measurable terms?',
    ],
-   artifacts:['Affinity-clustered insight statements (2–4)','Personas per relevant user group','Validated current-state journey or process map','Problem statement (1 page) — the Problem Hypothesis','Anti-goals (explicit boundaries — what we are NOT solving)','Success measures (leading & lagging, per user group)'],
+   artifacts:[{text:'Affinity-clustered insight statements (2–4)',type:'optional'},{text:'Personas per relevant user group',type:'optional'},{text:'Validated current-state journey or process map',type:'optional'},{text:'Problem statement (1 page) — the Problem Hypothesis',type:'mandatory'},{text:'Anti-goals (explicit boundaries — what we are NOT solving)',type:'mandatory'},{text:'Success measures (leading & lagging, per user group)',type:'mandatory'}],
    meetings:['Affinity mapping workshop','Problem statement review with practitioners and/or service admins','Internal gate check'],
    exercises:'E.g. affinity mapping, insight statements, persona development, How Might We, impact / effort prioritisation.',
    comms:[
      {a:'Research participants',w:'Close the loop — plain-language summary of what was heard and what the team concluded. People who gave time should know their input was used.'},
      {a:'Service Admins',w:'Specifically acknowledged — their workflow perspective should be visible in the problem statement summary.'},
      {a:'Clinical Supervisors',w:'Share the problem statement for a clinical safety sense-check before Ideation begins.'},
-     {a:'Executive (CDO)',w:'Problem statement and anti-goals shared for awareness. Internal gate — no exec approval required at this transition.'},
+     {a:'CDO / SteerCo',w:'Problem statement and anti-goals shared for awareness. Internal gate — no SteerCo approval required at this transition.'},
    ],
    gate:{q:'Do we have a clear, validated problem hypothesis?',
      d:'Internal team check. The problem statement is validated by at least 2–3 practitioners and/or service admins. Anti-goals are documented. Success measures are agreed. Team confirms this is worth ideating on.',
@@ -156,12 +156,10 @@ const STAGES = [
      {r:'R',n:'BI & Change Manager',d:'Applies improvement and viability lens; owns comms back to participants'},
      {r:'C',n:'SMEs',d:'Review and challenge the problem statement — both practitioner and service admin perspectives'},
      {r:'C',n:'Tech Lead',d:'Confirms technical constraints are reflected in scope and anti-goals'},
-     {r:'I',n:'CDO',d:'Active team member; receives problem statement for awareness'},
+     {r:'I',n:'CDO',d:'By invitation only — joins as active member from the second workstream, or when specifically invited'},
    ],
    footer:'Gate type: Internal Check (green gate). Team decides — problem hypothesis agreed internally before ideation begins.',
    p2:[
-     {doc:'Project Initiation Document (PID)',action:'create',note:'Now that the problem is validated and success measures are defined, the project can be formally initiated. The PID captures: problem statement, scope, anti-goals, success measures, team structure, approach, and budget.'},
-     {doc:'Business Case',action:'update',note:'Strengthen the business case with the validated problem statement and measurable success criteria. CDO receives the updated business case alongside the problem statement.'},
      {doc:'Risk Register',action:'update',note:'Add risks identified during Define — scope risks, constraints that tighten the solution space.'},
      {doc:'Lessons Log',action:'update',note:'Log lessons from the Define process.'},
    ],
@@ -194,14 +192,14 @@ const STAGES = [
      'What risks need to be de-risked before we commit to building?',
      'What does a draft service design (To Be) look like?',
    ],
-   artifacts:['Idea long-list','Concept sketches or posters (top 3–5)','Solution Hypothesis — the chosen direction with rationale','Draft Service Design (To Be) — how the solution fits into the service','Risk list: ideas and associated risks that need de-risking','Anti-goals confirmed or updated'],
+   artifacts:[{text:'Idea long-list',type:'mandatory'},{text:'Shortlist prioritised by merit',type:'mandatory'},{text:'Concept sketches or posters (per shortlisted concept)',type:'optional'},{text:'Solution Hypothesis — the chosen direction with rationale',type:'shortlist'},{text:'Draft Service Design (To Be) — how the solution fits into the service',type:'shortlist'},{text:'Risk list: ideas and associated risks that need de-risking',type:'shortlist'},{text:'Anti-goals confirmed or updated',type:'optional'}],
    meetings:['Ideation workshop (Crazy 8s, brainwriting, HMW prompts)','Concept review with practitioners and/or service admins','Tech feasibility check-in','Sprint show-and-tell'],
    exercises:'E.g. Crazy 8s, brainwriting, concept sketches, How Might We prompts, assumption mapping, dot voting. Keep it divergent first — generate before evaluating.',
    comms:[
      {a:'Service locations',w:'Contacted to give input on concepts if needed. Recruit from both practitioners and service admins where both are affected.'},
      {a:'Service Admins',w:'Involved in concept review in their own right — their workflow perspective may surface different issues than practitioners.'},
      {a:'Clinical Supervisors',w:'Consulted on any concepts touching clinical safety or content — e.g. question wording, client communication approach.'},
-     {a:'Executive (CDO)',w:'Active team member; aware of ideation progress through stand-ups.'},
+     {a:'CDO / SteerCo',w:'Active team member; aware of ideation progress through stand-ups.'},
    ],
    commsNote:'Concepts should always be framed as ideas under exploration — not decisions already made. This protects honest feedback from participants.',
    gate:{q:'Do we have a Solution Hypothesis worth de-risking?',
@@ -218,11 +216,10 @@ const STAGES = [
      {r:'R',n:'Delivery Manager',d:'Manages time-box, scope, and risk register input'},
      {r:'R',n:'SMEs',d:'Participate in ideation and concept review — practitioners and/or service admins'},
      {r:'C',n:'BI & Change Manager',d:'Change impact perspective on emerging concepts'},
-     {r:'I',n:'CDO',d:'Active team member; aware through stand-ups'},
+     {r:'I',n:'CDO',d:'By invitation only — joins as active member from the second workstream, or when specifically invited'},
    ],
    footer:'Gate type: Internal Check (green gate). Team decides — Solution Hypothesis agreed before de-risking begins.',
    p2:[
-     {doc:'Work Packages',action:'create',note:'As a solution direction is chosen, define Work Packages for the de-risking activities. Each Work Package describes what is to be tested, quality expectations, and how success will be confirmed.'},
      {doc:'Business Case',action:'update',note:'Update with solution direction and initial effort indicators. The business case should reflect the chosen hypothesis.'},
      {doc:'Risk Register',action:'update',note:'Add technology and design risks surfaced during ideation — ICIS constraints, integration risks, usability risks identified during concept review.'},
      {doc:'Lessons Log',action:'update',note:'Log what ideation and concept review taught the team.'},
@@ -256,41 +253,49 @@ const STAGES = [
      'Is it Viable — does it work for the organisation (clinically, operationally, commercially)?',
      'What does the data tell us about whether the solution will meet its success measures?',
    ],
-   artifacts:['Risk list with addressed/unaddressed status','De-risking evidence (varies: data, spikes, user tests, workshops, process tests)','Updated Draft Service Design — refined based on de-risking findings','Solution Hypothesis Proof — summary of evidence that it is Desirable, Feasible, Viable','Updated success measures if needed'],
-   meetings:['Weekly stand-up','Sprint show-and-tell','Risk review (standing agenda item — which risks need addressing this sprint)','Exec approval session (present Solution Hypothesis Proof before build begins)'],
+   artifacts:[{text:'Risk list with addressed/unaddressed status',type:'mandatory'},{text:'De-risking evidence (varies: data, spikes, user tests, workshops, process tests)',type:'optional'},{text:'Updated Draft Service Design — refined based on de-risking findings',type:'mandatory'},{text:'Solution Hypothesis Proof — summary of evidence that it is Desirable, Feasible, Viable',type:'mandatory'},{text:'Recommendation paper to SteerCo for decision',type:'mandatory'},{text:'Updated success measures if needed',type:'optional'}],
+   meetings:['Weekly stand-up','Sprint show-and-tell','Risk review (standing agenda item — which risks need addressing this sprint)','SteerCo approval session (present Solution Hypothesis Proof before build begins)'],
    exercises:'E.g. usability testing with wireframes, technical spikes, data analysis, process testing, user interviews, stakeholder workshops. Match the de-risking method to the risk — not every risk needs a prototype.',
    comms:[
      {a:'Service locations',w:'Engaged for de-risking activities as needed — e.g. user testing of wireframes, process testing. Framed as experiments, not commitments.'},
      {a:'Service Admins',w:'Involved in de-risking where their workflows are affected — usability testing, process review, feedback on Draft Service Design.'},
      {a:'Clinical Supervisors',w:'Consulted where de-risking touches clinical safety — e.g. question wording, client communication, data sensitivity.'},
-     {a:'Executive (CDO)',w:'Exec approval gate: Solution Hypothesis Proof presented. Exec confirms the team can proceed to Develop & Deploy. This is the key exec decision point before significant build investment begins.'},
+     {a:'CDO / SteerCo',w:'SteerCo approval gate: Solution Hypothesis Proof presented. SteerCo confirms the team can proceed to Develop & Deploy. This is the key exec decision point before significant build investment begins.'},
      {a:'SteerCo / Board',w:'Monthly update — solution hypothesis proven, moving into development.'},
    ],
    commsNote:'De-risking activities should be framed as experiments — not as the final solution. This protects honest feedback and manages expectations across the organisation.',
    gate:{q:'Is the solution hypothesis proven — is it Desirable, Feasible, and Viable?',
-     d:'Exec approval gate. The team presents the Solution Hypothesis Proof to the exec. The exec confirms the team can proceed to Develop & Deploy. This is the most significant decision point — it commits to building.',
+     d:'SteerCo approval gate. The team presents the Solution Hypothesis Proof to SteerCo. The exec confirms the team can proceed to Develop & Deploy. This is the most significant decision point — it commits to building.',
      opts:[
-       {c:'proceed',i:'→',t:'Proceed to Develop & Deploy',desc:'Exec confirms: solution is proven — proceed to build. (Red gate — exec approval required.)'},
+       {c:'proceed',i:'→',t:'Proceed to Develop & Deploy',desc:'Exec confirms: solution is proven — proceed to build. (Red gate — SteerCo approval required.)'},
        {c:'repeat',i:'↺',t:'More de-risking needed',desc:'Key risks unresolved — address them before proceeding.'},
        {c:'descope',i:'◎',t:'Descope the solution',desc:'Solution viable but too broad — narrow scope and re-test.'},
        {c:'stop',i:'✕',t:'Stop',desc:'Solution hypothesis not proven — return to Ideate & Design or backlog.'},
      ],
-     who:'Team presents evidence · Exec (CDO) approval required (red gate) · Delivery Manager records.'},
+     who:'Team presents evidence · SteerCo approval required (red gate) · Delivery Manager records.'},
    roles:[
      {r:'A',n:'BA / Service Designer',d:'Designs and runs de-risking activities; owns Solution Hypothesis Proof artefact'},
      {r:'R',n:'Tech Lead',d:'Leads technical de-risking — spikes, feasibility tests, integration checks'},
-     {r:'R',n:'Delivery Manager',d:'Manages time-box, risk register, and exec approval gate pack'},
+     {r:'R',n:'Delivery Manager',d:'Manages time-box, risk register, and SteerCo approval gate pack'},
      {r:'R',n:'SMEs',d:'Participate in de-risking activities — practitioners and/or service admins'},
      {r:'C',n:'BI & Change Manager',d:'Applies change impact lens; coordinates access for de-risking activities'},
-     {r:'I',n:'CDO',d:'Active team member; approval required at gate before Develop & Deploy begins'},
+     {r:'I',n:'CDO',d:'By invitation only — SteerCo (not CDO individually) approves at this gate'},
    ],
-   footer:'Gate type: Exec Approval (red gate). This is the key decision point before significant development investment. CDO approval required.',
+   footer:'Gate type: SteerCo Approval (red gate). This is the key decision point before significant development investment. CDO approval required.',
    p2:[
-     {doc:'Business Case',action:'update',note:'Update with Solution Hypothesis Proof. Now that desirability, feasibility, and viability are evidenced, the business case for development can be properly made. Present to CDO at the gate.'},
      {doc:'Risk Register',action:'update',note:'Update with de-risking outcomes. Mark addressed risks as resolved. Add any new risks surfaced during de-risking.'},
      {doc:'Lessons Log',action:'update',note:'Log what de-risking taught the team — what assumptions were wrong, what surprised them, what to do differently next time.'},
    ],
-   before:['Define gate is complete. Solution Hypothesis and risk list exist.','The team knows what questions need to be answered before committing to build.','No code has been written — de-risking is the goal, not delivery.'],
+   minigate:{
+   q:'Has the solution been validated through a prototype, trial, or pilot?',
+   d:'Before presenting to SteerCo, the solution must be validated in a practical pilot with key stakeholders. This gate is owned by the Quality Client Experience Team and Location Manager — not the project team.',
+   opts:[
+     {c:'proceed',i:'→',t:'Proceed to SteerCo gate',desc:'Pilot evidence gathered and sign-off received from Quality Client Experience Team and Location Manager.'},
+     {c:'repeat',i:'↺',t:'Continue piloting',desc:'Insufficient evidence or stakeholder sign-off — extend the pilot before presenting to SteerCo.'},
+   ],
+   who:'Quality Client Experience Team · Location Manager'
+  },
+  before:['Define gate is complete. Solution Hypothesis and risk list exist.','The team knows what questions need to be answered before committing to build.','No code has been written — de-risking is the goal, not delivery.'],
    steps:[
      {n:1,a:'Prioritise the risk list',t:'~1 hour',d:'From the risk list produced in Ideate & Design, prioritise: which risks would cause the solution to fail if unaddressed? Start with those. Match each risk to the cheapest de-risking method — not every risk needs a prototype.'},
      {n:2,a:'Address Desirability risks',t:'Varies',d:'Will users choose to use it? Test with the minimum viable experiment — wireframes shown to practitioners or service admins, a process walkthrough, a conversation. You don\'t need built software to test desirability.'},
@@ -298,12 +303,12 @@ const STAGES = [
      {n:4,a:'Address Viability risks',t:'Varies',d:'Does it work for the organisation — clinically, operationally, commercially? Workshops with Clinical Supervisors, process reviews with service admins, data analysis against targets. Does the solution meet the success measures defined in Define?'},
      {n:5,a:'Update the Draft Service Design',t:'~half day',d:'Refine the Draft Service Design (To Be) based on what de-risking revealed. This becomes the input to Develop & Deploy — close enough to build from, not necessarily final.'},
      {n:6,a:'Compile the Solution Hypothesis Proof',t:'~half day',d:'Document the evidence: what was tested, what was found, what risks were addressed. Is the solution Desirable, Feasible, and Viable? Be honest — partial evidence is still useful.'},
-     {n:7,a:'Exec approval gate',t:'~1 hour',d:'Present the Solution Hypothesis Proof to the exec. The gate question: is this solution proven enough to commit to building? CDO approval is required before Develop & Deploy begins.'},
+     {n:7,a:'SteerCo approval gate',t:'~1 hour',d:'Present the Solution Hypothesis Proof to SteerCo. The gate question: is this solution proven enough to commit to building? CDO approval is required before Develop & Deploy begins.'},
    ],
    pitfalls:[
      {t:'Building a polished prototype when a rough one would do',d:'De-risking asks a question. Use the cheapest thing that answers it. A sketch, a spike, a conversation, or a data pull may be enough. A polished prototype takes weeks and answers the same question.'},
-     {t:'Treating de-risking as the final product',d:'The output of this stage is evidence — not a deliverable. Don\'t let de-risking activities become the solution before exec approval is sought.'},
-     {t:'Skipping the exec gate',d:'This is the key decision point. Proceeding to Develop & Deploy without exec approval removes the organisation\'s ability to redirect. Don\'t skip it.'},
+     {t:'Treating de-risking as the final product',d:'The output of this stage is evidence — not a deliverable. Don\'t let de-risking activities become the solution before SteerCo approval is sought.'},
+     {t:'Skipping the SteerCo gate',d:'This is the key decision point. Proceeding to Develop & Deploy without SteerCo approval removes the organisation\'s ability to redirect. Don\'t skip it.'},
    ],
    done:['All priority risks have been addressed or consciously accepted.','Evidence exists for Desirability, Feasibility, and Viability.','Draft Service Design is refined and ready to build from.','The exec has reviewed the Solution Hypothesis Proof and approved proceeding to Develop & Deploy.'],
   },
@@ -327,7 +332,7 @@ const STAGES = [
      {a:'Service Admins',w:'Specifically briefed on what changes for their workflows. Per-program configuration may affect service admins differently — make this explicit.'},
      {a:'Clinical Supervisors',w:'Informed of releases; confirm clinical safety oversight is in place. Involved in configuration decisions where clinical content is affected — e.g. question wording per program.'},
      {a:'Program Managers',w:'Engaged on per-program configuration. Identified as future owners of configuration settings.'},
-     {a:'Executive (CDO)',w:'Regular progress updates. Informed of adoption results. Approval sought if significant scope changes arise.'},
+     {a:'CDO / SteerCo',w:'Regular progress updates. Informed of adoption results. Approval sought if significant scope changes arise.'},
      {a:'SteerCo / Board',w:'Monthly update during development and rollout.'},
      {a:'Organisation-wide',w:'RAWA Connect update as rollout broadens — share what is working and what has been learned.'},
    ],
@@ -349,14 +354,12 @@ const STAGES = [
      {r:'R',n:'SMEs',d:'UAT; champion adoption at service locations — practitioners and/or service admins as relevant'},
      {r:'C',n:'Program Managers',d:'Define per-program configuration needs; identified as future owners of configuration'},
      {r:'C',n:'Clinical Supervisors',d:'Clinical safety oversight; confirm content governance applies across all locations'},
-     {r:'I',n:'CDO',d:'Active team member; approval for significant scope changes'},
+     {r:'I',n:'CDO',d:'By invitation only — joins as active member from the second workstream, or when specifically invited'},
    ],
-   footer:'Gate type: Internal Check (green gate) — team and operational owners confirm readiness. Exec informed.',
+   footer:'Gate type: Internal Check (green gate) — team and operational owners confirm readiness. SteerCo informed.',
    p2:[
-     {doc:'Work Packages',action:'update',note:'Update or create Work Packages for each significant sprint or release increment.'},
-     {doc:'Issue Register',action:'create',note:'Open the issue register when the solution goes live. Capture every defect, workaround, and operational problem as it happens.'},
+     {doc:'GitHub Issues',action:'update',note:'Use GitHub issue types for non-product issues — process, operational, or support problems that don\'t belong in the product backlog. Capture every defect, workaround, and operational problem as it happens.'},
      {doc:'Risk Register',action:'update',note:'Update with operational and scale risks surfaced during delivery.'},
-     {doc:'Business Case',action:'update',note:'Review the business case against adoption and benefits data. Are the benefits materialising?'},
      {doc:'Lessons Log',action:'update',note:'Sprint retrospective findings feed directly into the lessons log. Capture both delivery and change management lessons.'},
    ],
    before:['Measure & De-Risk gate is complete. Exec has approved proceeding to build.','Draft Service Design is ready to build from.','At least one named service location has agreed to receive the first release.','The team has capacity to support releases actively.'],
@@ -388,7 +391,7 @@ const STAGES = [
      'How will benefits continue to be measured after the project team moves on?',
      'What new problems or insights has this solution surfaced — what goes into the backlog?',
    ],
-   artifacts:['Handover pack (documentation, runbooks, configuration guide)','Named operational owner agreement','BAU support model and escalation path','Benefits-realisation plan (ongoing CI measurement)','Final retrospective & lessons logged to improvement backlog','New backlog entries from CI insights'],
+   artifacts:[{text:'Handover pack (documentation, runbooks, configuration guide, support video)',type:'mandatory'},{text:'Named operational owner agreement',type:'mandatory'},{text:'BAU support model and escalation path',type:'mandatory'},{text:'Updated service map — affected journey steps with RACI and process links',type:'mandatory'},{text:'Benefits-realisation plan (ongoing CI measurement)',type:'optional'},{text:'Final retrospective & lessons logged to improvement backlog',type:'optional'},{text:'New backlog entries from CI insights',type:'optional'}],
    meetings:['Handover workshop(s) with operational owners','Final project retrospective','Benefits review session','Formal handover sign-off meeting'],
    exercises:'E.g. handover workshops, operational owner sign-off, benefits review, final retrospective.',
    comms:[
@@ -396,7 +399,7 @@ const STAGES = [
      {a:'Service Admins',w:'Clear guidance on the BAU support model — who to contact for help, how to raise workflow issues.'},
      {a:'Clinical Supervisors',w:'Confirmed as ongoing clinical safety owners and content governance owners — e.g. keeping question wording appropriate per program.'},
      {a:'Program Managers',w:'Confirmed as operational owners of program-level configuration. Handover pack provided.'},
-     {a:'Executive (CDO)',w:'Final handover sign-off. Benefits-realisation summary presented.'},
+     {a:'CDO / SteerCo',w:'Final handover sign-off. Benefits-realisation summary presented.'},
      {a:'SteerCo / Board',w:'Workstream closure reported. Benefits summary and lessons learned shared.'},
      {a:'Organisation-wide',w:'RAWA Connect — celebrate the outcome. Acknowledge the contribution of practitioners, service admins, and clients. Feed CI insights back to the organisation.'},
    ],
@@ -416,13 +419,13 @@ const STAGES = [
      {r:'R',n:'BA / Service Designer',d:'Produces configuration and user guides for practitioners and service admins; supports training'},
      {r:'A',n:'Program Managers',d:'Accept ownership of program-level configuration'},
      {r:'A',n:'Clinical Supervisors',d:'Accept ongoing clinical safety oversight and content governance'},
-     {r:'I',n:'CDO',d:'Signs off formal closure and benefits summary'},
+     {r:'I',n:'CDO',d:'Signs off formal closure and benefits summary — invited to this gate'},
    ],
    footer:'After Embed & CI, the team returns to Stage 0 for the next problem. CI insights feed back into the problem backlog as new entries.',
    p2:[
-     {doc:'End Project Report',action:'create',note:'The final PRINCE2 document. Covers: delivery against the original PID, business case outcomes vs. forecast, summary of issues and risks, and confirmation that all named owners have accepted responsibility.'},
+     {doc:'End Project Report',action:'create',note:'A check-in against the \'what success looks like\' measures agreed in Stage 2. Were the outcomes achieved? What would we do differently? Confirm all named owners have accepted responsibility.'},
      {doc:'Business Case',action:'close',note:'Final benefits review against the business case. Present to CDO at closure. Ongoing CI measurement transfers to the named operational owner.'},
-     {doc:'Issue Register',action:'close',note:'All open issues resolved or formally accepted. Close the register and hand a summary to the operational owner.'},
+     {doc:'GitHub Issues',action:'close',note:'All open non-product issues resolved or formally accepted. Summarise outstanding items and hand to the operational owner.'},
      {doc:'Risk Register',action:'close',note:'Residual risks handed to the operational owner. Any ongoing risks documented in the BAU support model.'},
      {doc:'Lessons Log',action:'close',note:'Final retrospective entries logged. The completed lessons log feeds into the improvement backlog — not filed and forgotten.'},
    ],
@@ -530,11 +533,17 @@ STAGES.forEach(s=>{
         <div class="sec-label">Key questions</div>
         <ul class="dot-list">${s.questions.map(q=>`<li>${q}</li>`).join('')}</ul>
         <div style="margin-top:16px">
-          <div class="sec-label">Artefacts produced <span style="font-weight:400;font-style:italic;text-transform:none;letter-spacing:0;">(optional)</span></div>
-          <div class="tag-wrap">${s.artifacts.map(a=>`<span class="tag tag-optional">${a}</span>`).join('')}</div>
+          <div class="sec-label">Artefacts produced</div>
+          <div class="artifact-legend" style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap;align-items:center;">
+            <span style="font-size:10px;color:var(--ink3);">Key:</span>
+            <span class="tag tag-mandatory" style="padding:1px 6px;font-size:9px;">mandatory</span>
+            <span class="tag tag-optional" style="padding:1px 6px;font-size:9px;">optional</span>
+            <span class="tag tag-shortlist" style="padding:1px 6px;font-size:9px;">per shortlist</span>
+          </div>
+          <div class="tag-wrap">${s.artifacts.map(a=>{const text=typeof a==='string'?a:a.text;const tp=typeof a==='string'?'optional':(a.type||'optional');const cls=tp==='mandatory'?'tag tag-mandatory':tp==='shortlist'?'tag tag-shortlist':'tag tag-optional';return`<span class="${cls}">${text}</span>`;}).join('')}</div>
         </div>
         ${s.p2 ? `<div class="p2-section">
-          <div class="p2-label">PRINCE2 management products</div>
+          <div class="p2-label">Project Management Products</div>
           <div class="tag-wrap" style="margin-bottom:8px;">${s.p2.map(p=>`<span class="p2-tag ${p.action==='update'?'update':p.action==='close'?'close':''}" title="${p.note}">${p.doc}</span>`).join('')}</div>
           <div style="display:flex;flex-direction:column;gap:6px;">${s.p2.map(p=>`
             <div style="font-size:12px;line-height:1.45;color:var(--ink2);">
@@ -550,6 +559,19 @@ STAGES.forEach(s=>{
         </div>
       </div>
       <div class="card-section">
+        ${s.minigate?`
+        <div class="sec-label" style="margin-top:16px;">Pre-gate validation</div>
+        <div class="gate-block" style="margin-bottom:14px;">
+          <div class="gate-q">${s.minigate.q}</div>
+          <div class="gate-desc">${s.minigate.d}</div>
+          <div class="gate-opts">${s.minigate.opts.map(o=>`
+            <div class="gate-opt ${GATE_OPT_CLASS[o.c]}">
+              <span class="gate-opt-icon">${o.i}</span>
+              <span><strong>${o.t}</strong> — ${o.desc}</span>
+            </div>`).join('')}
+          </div>
+          <div class="gate-who"><strong>Who decides:</strong> ${s.minigate.who}</div>
+        </div>`:''}
         <div class="sec-label">Decision gate</div>
         <div class="gate-block">
           <div class="gate-q">${s.gate.q}</div>
@@ -653,6 +675,8 @@ const COMMENTS_API = location.hostname === 'localhost'
   ? 'http://localhost:7071/api/comments'
   : 'https://methodology-api.azurewebsites.net/api/comments';
 const ALLOWED_DOMAIN = '@relationshipswa.org.au';
+const CONTENT_VERSION = 'v2';
+const stageKey = s => `${CONTENT_VERSION}-${s}`;
 
 const _HL_PALETTE = [
   { bg:'rgba(255,213,79,.35)',  bd:'rgba(245,158,11,.8)',  hover:'rgba(245,158,11,.5)'  }, // yellow
@@ -929,7 +953,7 @@ async function loadComments(stage) {
   const list = document.getElementById('comment-list');
   list.innerHTML = '<div class="c-loading">Loading…</div>';
   try {
-    const res = await fetch(`${COMMENTS_API}?stage=${encodeURIComponent(stage)}`);
+    const res = await fetch(`${COMMENTS_API}?stage=${encodeURIComponent(stageKey(stage))}`);
     const data = await res.json();
     clearHighlights();
     if (!data.length) {
@@ -986,7 +1010,7 @@ async function submitComment(e) {
     const res = await fetch(COMMENTS_API, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ stage: currentStage, author, text, ...pendingAnchor && { quote: pendingAnchor.quote, prefix: pendingAnchor.prefix, suffix: pendingAnchor.suffix } })
+      body: JSON.stringify({ stage: stageKey(currentStage), author, text, ...pendingAnchor && { quote: pendingAnchor.quote, prefix: pendingAnchor.prefix, suffix: pendingAnchor.suffix } })
     });
     if (res.ok) {
       document.getElementById('c-text').value = '';
@@ -1116,7 +1140,7 @@ async function loadNavCounts() {
     if (!res.ok) return;
     const counts = await res.json();
     document.querySelectorAll('.stage-btn[data-stage]').forEach(btn => {
-      const n = counts[btn.dataset.stage] || 0;
+      const n = counts[stageKey(btn.dataset.stage)] || 0;
       const existing = btn.querySelector('.stage-count-badge');
       if (existing) existing.remove();
       if (n > 0) {
@@ -1140,7 +1164,7 @@ async function downloadCommentsCSV() {
   try {
     const results = await Promise.all(stages.map(async s => {
       try {
-        const res = await fetch(`${COMMENTS_API}?stage=${encodeURIComponent(s)}`);
+        const res = await fetch(`${COMMENTS_API}?stage=${encodeURIComponent(stageKey(s))}`);
         return res.ok ? (await res.json()).map(c => ({ ...c, _stageLabel: stageLabels[s] || s })) : [];
       } catch(_) { return []; }
     }));
